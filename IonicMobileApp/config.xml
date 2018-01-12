@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="org.mycity.myward" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:mfp="http://www.ibm.com/mobilefirst/cordova-plugin-mfp">
+<widget id="org.mycity.myward" version="0.0.2" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:mfp="http://www.ibm.com/mobilefirst/cordova-plugin-mfp">
     <name>MyWard</name>
     <description>Get your civic issues resolved by posting through this app.</description>
     <author email="shivahr@gmail.com" href="https://developer.ibm.com/code/author/shivahr/">Shiva Kumar H R</author>
@@ -121,7 +121,6 @@
     <mfp:server runtime="mfp" url="https://mobilefoundation-75-c5-server.mybluemix.net:443" />
     <mfp:directUpdateAuthenticityPublicKey />
     <mfp:languagePreferences>en</mfp:languagePreferences>
-    <engine name="android" spec="^6.3.0" />
     <plugin name="cordova-plugin-device" spec="^1.1.4" />
     <plugin name="cordova-plugin-ionic-webview" spec="^1.1.16" />
     <plugin name="cordova-plugin-mfp" spec="^8.0.2017112205" />
@@ -136,4 +135,5 @@
     </plugin>
     <plugin name="cordova-plugin-camera" spec="^3.0.0" />
     <plugin name="info.protonet.imageresizer" spec="^0.1.1" />
+    <engine name="android" spec="~6.3.0" />
 </widget>
