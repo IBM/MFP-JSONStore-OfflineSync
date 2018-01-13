@@ -187,19 +187,19 @@ export class LoginPage {
       this.showAlert('Login Failure', 'Username and password are required');
       return;
     }
-    <b>this.loader = this.loadingCtrl.create({
+    this.loader = this.loadingCtrl.create({
       content: 'Signining in. Please wait ...',
       dismissOnPageChange: true
     });
     this.loader.present().then(() => {
-      if (this.hasNetworkConnection()) {
+      <b>if (this.hasNetworkConnection()) {
         console.log('--> Online sign-in with user: ', username);
         this.authHandler.login(username, password);
       } else {
         console.log('--> Offline sign-in with user: ', username);
         this.authHandler.offlineLogin(username, password);
-      }
-    });</b>
+      }</b>
+    });
   }
 
   <b>hasNetworkConnection() {
