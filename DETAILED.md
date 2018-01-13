@@ -41,14 +41,12 @@ $ ionic cordova plugin add cordova-plugin-mfp-jsonstore
 Update `IonicMobileApp/src/providers/auth-handler/auth-handler.ts` as below:
 
 <pre><code>
-/// &lt;reference path="../../../plugins/cordova-plugin-mfp/typings/worklight.d.ts" /&rt;
-<b>/// &lt;reference path="../../../plugins/cordova-plugin-mfp-jsonstore/typings/jsonstore.d.ts" /&rt;</b>
-
-import { Injectable } from '@angular/core';
-
-@Injectable()
+/// &lt;reference path="../../../plugins/cordova-plugin-mfp/typings/worklight.d.ts" /&gt;
+<b>/// &lt;reference path="../../../plugins/cordova-plugin-mfp-jsonstore/typings/jsonstore.d.ts" /&gt;</b>
+...
 export class AuthHandlerProvider {
   ...
+
   login(username, password) {
     console.log('--> AuthHandler login called. isChallenged = ', this.isChallenged);
     this.username = username;
@@ -70,6 +68,8 @@ export class AuthHandlerProvider {
       );
     }
   }
+
+  ...
 
   <b>collectionName = 'userCredentials';
   collections = {
