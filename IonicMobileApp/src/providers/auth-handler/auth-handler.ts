@@ -14,6 +14,7 @@
  */
 
 /// <reference path="../../../plugins/cordova-plugin-mfp/typings/worklight.d.ts" />
+/// <reference path="../../../plugins/cordova-plugin-mfp-jsonstore/typings/jsonstore.d.ts" />
 
 import { Injectable } from '@angular/core';
 
@@ -121,6 +122,7 @@ export class AuthHandlerProvider {
       .then(
         (success) => {
           console.log('--> AuthHandler: login success');
+          this.storeCredentialsInJSONStore(username, password);
         },
         (failure) => {
           console.log('--> AuthHandler: login failure: ' + JSON.stringify(failure));
@@ -141,5 +143,71 @@ export class AuthHandlerProvider {
         console.log('--> AuthHandler: logout failure: ' + JSON.stringify(failure));
       }
     );
+  }
+
+  collectionName = 'userCredentials';
+  collections = {
+    userCredentials: {
+      searchFields: {username: 'string'}
+    }
+  }
+
+  storeCredentialsInJSONStore(username, password) {
+    console.log('--> AuthHandler: storeCredentialsInJSONStore called');
+
+    WL.SecurityUtils.base64Encode(username).then((res) => {
+      // base64EncodedUsername = res;
+    });
+    let authData = {
+      username: username, // base64EncodedUsername,
+      password: password,
+      localKeyGen: true
+    }
+
+    // https://www.ibm.com/support/knowledgecenter/en/SSHS8R_8.0.0/com.ibm.worklight.apiref.doc/html/refjavascript-client/html/WL.JSONStore.html
+    WL.JSONStore.closeAll({});
+    WL.JSONStore.init(this.collections, authData).then((success) => {
+      WL.JSONStore.get(this.collectionName).count({}, {}).then((countResult) => {
+        if (countResult == 0) {
+          // The JSONStore collection is empty, populate it.
+          WL.JSONStore.get(this.collectionName).add(authData, {});
+          console.log('--> AuthHandler: JSONStore collection has been populated with user-credentials for user: ', username);
+        }
+      })
+    },(failure) => {
+      console.log('--> AuthHandler: Password change detected for user: ' + username + ' . Destroying old JSONStore so as to recreate it\n', JSON.stringify(failure));
+      WL.JSONStore.destroy(username).then(() => {
+        this.storeCredentialsInJSONStore(username, password);
+      });
+    })
+  }
+
+  offlineLogin(username, password) {
+    console.log('--> AuthHandler: offlineLogin called');
+
+    WL.SecurityUtils.base64Encode(username).then((res) => {
+      // base64EncodedUsername = res;
+    });
+    let authData = {
+      username: username, // base64EncodedUsername,
+      password: password,
+      localKeyGen: true
+    }
+    WL.JSONStore.closeAll({});
+    WL.JSONStore.init(this.collections, authData).then((success) => {
+      WL.JSONStore.get(this.collectionName).count({}, {}).then((countResult) => {
+        if (countResult == 0) {
+          WL.JSONStore.destroy(username);
+          console.log('--> AuthHandler: offlineLogin failed. First time login must be done when internet connection is available');
+          this.loginFailureCallback('First time login must be done when internet connection is available');
+        } else {
+          console.log('--> AuthHandler: offlineLogin success');
+          this.loginSuccessCallback();
+        }
+      })
+    }, (failure) => {
+      console.log('--> AuthHandler: offlineLogin failed. Invalid username/password\n', JSON.stringify(failure));
+      this.loginFailureCallback('Invalid username/password');
+    })
   }
 }

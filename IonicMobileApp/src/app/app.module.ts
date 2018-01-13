@@ -23,6 +23,7 @@ import { GoogleMaps } from '@ionic-native/google-maps';
 import { Camera } from '@ionic-native/camera';
 import { FileTransfer } from '@ionic-native/file-transfer';
 import { ImageResizer } from '@ionic-native/image-resizer';
+import { Network } from '@ionic-native/network';
 
 import { MyApp } from './app.component';
 import { LoginPage } from '../pages/login/login'
@@ -62,7 +63,8 @@ import { MyWardDataProvider } from '../providers/my-ward-data/my-ward-data';
     GoogleMaps,
     Camera,
     FileTransfer,
-    ImageResizer
+    ImageResizer,
+    Network
   ]
 })
 export class AppModule {}

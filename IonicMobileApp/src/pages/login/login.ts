@@ -16,6 +16,7 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, AlertController, LoadingController } from 'ionic-angular';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { Network } from '@ionic-native/network';
 
 import { AuthHandlerProvider } from '../../providers/auth-handler/auth-handler';
 import { HomePage } from '../home/home';
@@ -31,7 +32,7 @@ export class LoginPage {
   isUsernameDisabled: boolean = false;
   fixedUsername = null;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams,
+  constructor(public navCtrl: NavController, public navParams: NavParams, private network: Network,
     public alertCtrl: AlertController, public authHandler:AuthHandlerProvider, public loadingCtrl: LoadingController) {
     console.log('--> LoginPage constructor() called');
 
@@ -75,14 +76,24 @@ export class LoginPage {
       this.showAlert('Login Failure', 'Username and password are required');
       return;
     }
-    console.log('--> Sign-in with user: ' + username);
     this.loader = this.loadingCtrl.create({
       content: 'Signining in. Please wait ...',
       dismissOnPageChange: true
     });
     this.loader.present().then(() => {
-      this.authHandler.login(username, password);
+      if (this.hasNetworkConnection()) {
+        console.log('--> Online sign-in with user: ', username);
+        this.authHandler.login(username, password);
+      } else {
+        console.log('--> Offline sign-in with user: ', username);
+        this.authHandler.offlineLogin(username, password);
+      }
     });
+  }
+
+  hasNetworkConnection() {
+    // https://ionicframework.com/docs/native/network/
+    return this.network.type !== 'none';
   }
 
   showAlert(alertTitle, alertMessage) {

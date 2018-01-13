@@ -38,11 +38,11 @@ export class MyWardDataProvider {
       let dataRequest = new WLResourceRequest("/adapters/MyWardData", WLResourceRequest.GET);
       dataRequest.send().then(
         (response) => {
-          console.log('--> MyWardDataProvider loaded data from adapter ', response);
+          console.log('--> MyWardDataProvider loaded data from adapter\n', response);
           this.data = response.responseJSON;
           resolve(this.data)
         }, (failure) => {
-          console.log('--> MyWardDataProvider failed to load data', failure);
+          console.log('--> MyWardDataProvider failed to load data\n', JSON.stringify(failure));
           resolve('error')
         })
     });
@@ -63,7 +63,7 @@ export class MyWardDataProvider {
           this.objectStorageAccess = response.responseJSON;
           resolve(this.objectStorageAccess)
         }, (failure) => {
-          console.log('--> MyWardDataProvider failed to get Object Storage AuthToken from adapter', failure);
+          console.log('--> MyWardDataProvider failed to get Object Storage AuthToken from adapter\n', JSON.stringify(failure));
           resolve('error')
         })
     });
@@ -79,7 +79,7 @@ export class MyWardDataProvider {
           console.log('--> MyWardDataProvider: Upload successful:\n', response);
           resolve(response)
         }, (failure) => {
-          console.log('--> MyWardDataProvider: Upload failed:\n', failure);
+          console.log('--> MyWardDataProvider: Upload failed:\n', JSON.stringify(failure));
           reject(failure)
         })
     });
@@ -105,7 +105,7 @@ export class MyWardDataProvider {
         resolve(data);
       }, (err) => {
         // error
-        console.log('--> MyWardDataProvider: Image upload failed:\n', err);
+        console.log('--> MyWardDataProvider: Image upload failed:\n', JSON.stringify(err));
         reject(err);
       })
     });
