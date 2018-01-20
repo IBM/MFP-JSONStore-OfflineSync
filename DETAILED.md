@@ -30,17 +30,17 @@ $ git push
 
 ## Step 2. Support offline login 
 
-### 2.1 Save authenticated credentials in JSONStore and use it for offline login
+### 2.1 Use JSONStore for offline login
 
 Follow tutorial https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/7.1/advanced-topics/offline-authentication/
 
-Add Mobile Foundation JSONStore Cordova plugin as below:
+Add Cordova plugin for Mobile Foundation JSONStore as below:
 
 ```
 $ ionic cordova plugin add cordova-plugin-mfp-jsonstore
 ```
 
-Add new provider for working with JSONStore as below:
+Add a new provider for working with JSONStore as below:
 
 ```
 $ ionic generate provider JSONStoreHandler
@@ -110,7 +110,7 @@ export class JsonStoreHandlerProvider {
     collectionInstance.count({}, {}).then((countResult) => {
       if (countResult == 0) {
         collectionInstance.add({ name: this.userCredentialsCollectionName }, {});
-        console.log('--> JsonStoreHandler: ' + this.userCredentialsCollectionName + ' JSONStore collection has been initialized for offlineLogin');
+        console.log('--> JsonStoreHandler: \'' + this.userCredentialsCollectionName + '\' JSONStore collection has been initialized for offlineLogin');
       }
     })
   }
