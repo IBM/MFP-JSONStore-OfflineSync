@@ -150,14 +150,37 @@ export class AuthHandlerProvider {
     console.log('--> AuthHandler constructor() called');
   }
 
-  <b>handleSuccess(data) {
-    console.log('--> AuthHandler handleSuccess called');
-    this.isChallenged = false;
-  }</b>
+  init() {
+    ...
+    this.userLoginChallengeHandler.handleChallenge = this.handleChallenge.bind(this);
+    <b>// this.userLoginChallengeHandler.handleSuccess = this.handleSuccess.bind(this);</b>
+    this.userLoginChallengeHandler.handleFailure = this.handleFailure.bind(this);
+  }
+
+  ...
+
+  <b>// handleSuccess(data) {
+  //   console.log('--> AuthHandler handleSuccess called');
+  //   this.isChallenged = false;
+  //   if (this.loginSuccessCallback != null) {
+  //     this.loginSuccessCallback();
+  //   } else {
+  //     console.log('--> AuthHandler: loginSuccessCallback not set!');
+  //   }
+  // }</b>
+
+  ...
 
   login(username, password) {
-    console.log('--> AuthHandler login called. isChallenged = ', this.isChallenged);
+    console.log('--> AuthHandler login called. isChallenged = ' + this.isChallenged);
     this.username = username;
+    <b>this.userLoginChallengeHandler.handleSuccess = () => {
+      console.log('--> AuthHandler handleSuccess called');
+      this.isChallenged = false;
+      this.jsonStoreHandler.initCollections(username, password, true).then(() => {
+        this.loginSuccessCallback();
+      });
+    };</b>
     if (this.isChallenged) {
       this.userLoginChallengeHandler.submitChallengeAnswer({'username':username, 'password':password});
     } else {
@@ -165,9 +188,6 @@ export class AuthHandlerProvider {
       .then(
         (success) => {
           console.log('--> AuthHandler login success');
-          <b>this.jsonStoreHandler.initCollections(username, password, true).then(() => {
-            this.loginSuccessCallback();
-          });</b>
         },
         (failure) => {
           console.log('--> AuthHandler login failure: ' + JSON.stringify(failure));
