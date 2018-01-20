@@ -34,13 +34,14 @@ $ git push
 
 Follow tutorial https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/7.1/advanced-topics/offline-authentication/
 
-Add Mobile Foundation JSONStore Cordova plugin
+Add Mobile Foundation JSONStore Cordova plugin as below:
 
 ```
 $ ionic cordova plugin add cordova-plugin-mfp-jsonstore
 ```
 
-Add new provider for working with JSONStore
+Add new provider for working with JSONStore as below:
+
 ```
 $ ionic generate provider JSONStoreHandler
 [OK] Generated a provider named JSONStoreHandler!
