@@ -125,11 +125,11 @@ export class JsonStoreHandlerProvider {
     WL.JSONStore.destroy(username);
   }
 
- // JSONStore username must be an alphanumeric string ([a-z, A-Z, 0-9]) and start with a letter
+  // JSONStore username must be an alphanumeric string ([a-z, A-Z, 0-9]) and start with a letter
   convertToJsonStoreCompatibleUsername(str: String) {
     // https://stackoverflow.com/questions/21647928/javascript-unicode-string-to-hex
     let result = "U"; // start with a letter
-    for (let i=0; i<str.length; i++) {
+    for (let i=0; i&lt;str.length; i++) {
       let hex = str.charCodeAt(i).toString(16);
       result += ("0"+hex).slice(-4); // if you want to support Unicode text, then use ("000"+hex)
     }
