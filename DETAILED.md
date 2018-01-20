@@ -56,7 +56,9 @@ import { Injectable } from '@angular/core';
 
 @Injectable()
 export class JsonStoreHandlerProvider {
-  <b>userCredentialsCollectionName = 'userCredentials';
+  <b>isCollectionInitialized = {};
+
+  userCredentialsCollectionName = 'userCredentials';
   userCredentialsCollections = {
     userCredentials: {
       searchFields: { username: 'string' }
@@ -71,6 +73,10 @@ export class JsonStoreHandlerProvider {
   initCollections(username, password, isOnline:boolean) {
     console.log('--> JsonStoreHandler: initCollections called');
     return new Promise( (resolve, reject) => {
+      if (username in this.isCollectionInitialized) {
+        console.log('--> JsonStoreHandler: collections have already been initialized for username: ' + username);
+        return resolve();
+      }
       let encodedUsername = this.convertToJsonStoreCompatibleUsername(username);
       console.log('--> JsonStoreHandler: username after encoding: ' + encodedUsername);
       let options = {
@@ -81,6 +87,7 @@ export class JsonStoreHandlerProvider {
       WL.JSONStore.closeAll({});
       WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
         console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection.');
+        this.isCollectionInitialized[username] = true;
         if (isOnline) {
           this.initCollectionForOfflineLogin();
         }
