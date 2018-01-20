@@ -34,18 +34,125 @@ $ git push
 
 Follow tutorial https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/7.1/advanced-topics/offline-authentication/
 
+Add Mobile Foundation JSONStore Cordova plugin
+
 ```
 $ ionic cordova plugin add cordova-plugin-mfp-jsonstore
 ```
 
+Add new provider for working with JSONStore
+```
+$ ionic generate provider JSONStoreHandler
+[OK] Generated a provider named JSONStoreHandler!
+```
+
+Update `IonicMobileApp/src/providers/json-store-handler/json-store-handler.ts` as below:
+
+<pre><code>
+<b>/// &lt;reference path="../../../plugins/cordova-plugin-mfp-jsonstore/typings/jsonstore.d.ts" /&gt;</b>
+
+import { Injectable } from '@angular/core';
+
+@Injectable()
+export class JsonStoreHandlerProvider {
+  <b>userCredentialsCollectionName = 'userCredentials';
+  userCredentialsCollections = {
+    userCredentials: {
+      searchFields: { username: 'string' }
+    }
+  }</b>
+
+  constructor() {
+    <b>console.log('--> JsonStoreHandler constructor() called');</b>
+  }
+
+  <b>// https://www.ibm.com/support/knowledgecenter/en/SSHS8R_8.0.0/com.ibm.worklight.apiref.doc/html/refjavascript-client/html/WL.JSONStore.html
+  initCollections(username, password, isOnline:boolean) {
+    console.log('--> JsonStoreHandler: initCollections called');
+    return new Promise( (resolve, reject) => {
+      let encodedUsername = this.convertToJsonStoreCompatibleUsername(username);
+      console.log('--> JsonStoreHandler: username after encoding: ' + encodedUsername);
+      let options = {
+        username: encodedUsername,
+        password: password,
+        localKeyGen: true
+      }
+      WL.JSONStore.closeAll({});
+      WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
+        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection.');
+        if (isOnline) {
+          this.initCollectionForOfflineLogin();
+        }
+      }, (failure) => {
+        if (isOnline) {
+          console.log('--> JsonStoreHandler: password change detected for user: ' + username + ' . Destroying old JSONStore so as to recreate it.\n', JSON.stringify(failure));
+          WL.JSONStore.destroy(encodedUsername).then(() => {
+            this.initCollections(username, password, isOnline);
+          });
+        } else {
+          console.log('--> JsonStoreHandler: failed to initialize \'' + this.userCredentialsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
+          reject(failure);
+        }
+      });
+    });
+  }
+
+  initCollectionForOfflineLogin() {
+    let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.userCredentialsCollectionName);
+    collectionInstance.count({}, {}).then((countResult) => {
+      if (countResult == 0) {
+        collectionInstance.add({ name: this.userCredentialsCollectionName }, {});
+        console.log('--> JsonStoreHandler: ' + this.userCredentialsCollectionName + ' JSONStore collection has been initialized for offlineLogin');
+      }
+    })
+  }
+
+  previousLoginExists() {
+    return new Promise( (resolve, reject) => {
+      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.userCredentialsCollectionName);
+      collectionInstance.count({}, {}).then((countResult) => {
+        if (countResult == 0) {
+          reject();
+        } else {
+          resolve();
+        }
+      })
+    });
+  }
+
+  destroyCollections(username) {
+    WL.JSONStore.destroy(username);
+  }
+
+ // JSONStore username must be an alphanumeric string ([a-z, A-Z, 0-9]) and start with a letter
+  convertToJsonStoreCompatibleUsername(str: String) {
+    // https://stackoverflow.com/questions/21647928/javascript-unicode-string-to-hex
+    let result = "U"; // start with a letter
+    for (let i=0; i<str.length; i++) {
+      let hex = str.charCodeAt(i).toString(16);
+      result += ("0"+hex).slice(-4); // if you want to support Unicode text, then use ("000"+hex)
+    }
+    return result
+  }</b>
+}
+</code></pre>
+
 Update `IonicMobileApp/src/providers/auth-handler/auth-handler.ts` as below:
 
 <pre><code>
-/// &lt;reference path="../../../plugins/cordova-plugin-mfp/typings/worklight.d.ts" /&gt;
-<b>/// &lt;reference path="../../../plugins/cordova-plugin-mfp-jsonstore/typings/jsonstore.d.ts" /&gt;</b>
+...
+<b>import { JsonStoreHandlerProvider } from '../json-store-handler/json-store-handler';</b>
 ...
 export class AuthHandlerProvider {
   ...
+  constructor(<b>private jsonStoreHandler:JsonStoreHandlerProvider</b>) {
+    console.log('--> AuthHandler constructor() called');
+  }
+
+  <b>handleSuccess(data) {
+    console.log('--> AuthHandler handleSuccess called');
+    this.isChallenged = false;
+  }</b>
 
   login(username, password) {
     console.log('--> AuthHandler login called. isChallenged = ', this.isChallenged);
@@ -53,17 +160,17 @@ export class AuthHandlerProvider {
     if (this.isChallenged) {
       this.userLoginChallengeHandler.submitChallengeAnswer({'username':username, 'password':password});
     } else {
-      // https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
-      var self = this;
       WLAuthorizationManager.login(this.securityCheckName, {'username':username, 'password':password})
       .then(
         (success) => {
-          console.log('--> AuthHandler: login success');
-          <b>this.storeCredentialsInJSONStore(username, password);</b>
+          console.log('--> AuthHandler login success');
+          <b>this.jsonStoreHandler.initCollections(username, password, true).then(() => {
+            this.loginSuccessCallback();
+          });</b>
         },
         (failure) => {
-          console.log('--> AuthHandler: login failure: ' + JSON.stringify(failure));
-          self.loginFailureCallback(failure.errorMsg);
+          console.log('--> AuthHandler login failure: ' + JSON.stringify(failure));
+          this.loginFailureCallback(failure.errorMsg);
         }
       );
     }
@@ -71,68 +178,19 @@ export class AuthHandlerProvider {
 
   ...
 
-  <b>collectionName = 'userCredentials';
-  collections = {
-    userCredentials: {
-      searchFields: {username: 'string'}
-    }
-  }
-
-  storeCredentialsInJSONStore(username, password) {
-    console.log('--> AuthHandler: storeCredentialsInJSONStore called');
-
-    WL.SecurityUtils.base64Encode(username).then((res) => {
-      // base64EncodedUsername = res;
-    });
-    let authData = {
-      username: username, // base64EncodedUsername,
-      password: password,
-      localKeyGen: true
-    }
-
-    // https://www.ibm.com/support/knowledgecenter/en/SSHS8R_8.0.0/com.ibm.worklight.apiref.doc/html/refjavascript-client/html/WL.JSONStore.html
-    WL.JSONStore.closeAll({});
-    WL.JSONStore.init(this.collections, authData).then((success) => {
-      WL.JSONStore.get(this.collectionName).count({}, {}).then((countResult) => {
-        if (countResult == 0) {
-          // The JSONStore collection is empty, populate it.
-          WL.JSONStore.get(this.collectionName).add(authData, {});
-          console.log('--> AuthHandler: JSONStore collection has been populated with user-credentials for user: ', username);
-        }
-      })
-    },(failure) => {
-      console.log('--> AuthHandler: Password change detected for user: ' + username + ' . Destroying old JSONStore so as to recreate it\n', JSON.stringify(failure));
-      WL.JSONStore.destroy(username).then(() => {
-        this.storeCredentialsInJSONStore(username, password);
+  <b>offlineLogin(username, password) {
+    console.log('--> AuthHandler offlineLogin called');
+    this.jsonStoreHandler.initCollections(username, password, false).then((success) => {
+      this.jsonStoreHandler.previousLoginExists().then(() => {
+        console.log('--> AuthHandler offlineLogin success');
+        this.loginSuccessCallback();
+      }, () => {
+        this.jsonStoreHandler.destroyCollections(username);
+        console.log('--> AuthHandler offlineLogin failed. First time login must be done when internet connection is available');
+        this.loginFailureCallback('First time login must be done when internet connection is available');
       });
-    })
-  }
-
-  offlineLogin(username, password) {
-    console.log('--> AuthHandler: offlineLogin called');
-
-    WL.SecurityUtils.base64Encode(username).then((res) => {
-      // base64EncodedUsername = res;
-    });
-    let authData = {
-      username: username, // base64EncodedUsername,
-      password: password,
-      localKeyGen: true
-    }
-    WL.JSONStore.closeAll({});
-    WL.JSONStore.init(this.collections, authData).then((success) => {
-      WL.JSONStore.get(this.collectionName).count({}, {}).then((countResult) => {
-        if (countResult == 0) {
-          WL.JSONStore.destroy(username);
-          console.log('--> AuthHandler: offlineLogin failed. First time login must be done when internet connection is available');
-          this.loginFailureCallback('First time login must be done when internet connection is available');
-        } else {
-          console.log('--> AuthHandler: offlineLogin success');
-          this.loginSuccessCallback();
-        }
-      })
     }, (failure) => {
-      console.log('--> AuthHandler: offlineLogin failed. Invalid username/password\n', JSON.stringify(failure));
+      console.log('--> AuthHandler offlineLogin failed. Invalid username/password\n', JSON.stringify(failure));
       this.loginFailureCallback('Invalid username/password');
     })
   }</b>
@@ -193,10 +251,10 @@ export class LoginPage {
     });
     this.loader.present().then(() => {
       <b>if (this.hasNetworkConnection()) {
-        console.log('--> Online sign-in with user: ', username);
+        console.log('--> Online sign-in with user: ' + username);
         this.authHandler.login(username, password);
       } else {
-        console.log('--> Offline sign-in with user: ', username);
+        console.log('--> Offline sign-in with user: ' + username);
         this.authHandler.offlineLogin(username, password);
       }</b>
     });
