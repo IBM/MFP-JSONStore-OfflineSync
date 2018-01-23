@@ -20,9 +20,9 @@ limitations under the License.
 </ion-header>
 
 <ion-content padding>
-  <h2 text-wrap>{{grievance.problemDescription}}</h2>
-  <p>Reported on: {{grievance.reportedDateTime}}</p>
-  <img img-cache img-cache-src="{{baseUrl}}{{grievance.picture.large}}">
-  <p text-wrap>@ {{grievance.address}}</p>
+  <h2 text-wrap>{{grievance.json.problemDescription}}</h2>
+  <p>Reported on: {{grievance.json.reportedDateTime}}</p>
+  <img img-cache img-cache-src="{{baseUrl}}{{grievance.json.picture.large}}">
+  <p text-wrap>@ {{grievance.json.address}}</p>
   <div id="map"></div>
 </ion-content>

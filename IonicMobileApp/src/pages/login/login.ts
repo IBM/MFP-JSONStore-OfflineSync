@@ -82,10 +82,10 @@ export class LoginPage {
     });
     this.loader.present().then(() => {
       if (this.hasNetworkConnection()) {
-        console.log('--> Online sign-in with user: ', username);
+        console.log('--> Online sign-in with user: ' + username);
         this.authHandler.login(username, password);
       } else {
-        console.log('--> Offline sign-in with user: ', username);
+        console.log('--> Offline sign-in with user: ' + username);
         this.authHandler.offlineLogin(username, password);
       }
     });

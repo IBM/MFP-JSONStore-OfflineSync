@@ -19,6 +19,7 @@ import { ImgCacheService } from 'ng-imgcache';
 
 import { MyWardDataProvider } from '../../providers/my-ward-data/my-ward-data';
 import { AuthHandlerProvider } from '../../providers/auth-handler/auth-handler';
+import { JsonStoreHandlerProvider } from '../../providers/json-store-handler/json-store-handler';
 import { ProblemDetailPage } from '../problem-detail/problem-detail';
 import { ReportNewPage } from '../report-new/report-new';
 import { LoginPage } from '../login/login';
@@ -34,7 +35,7 @@ export class HomePage {
 
   constructor(public navCtrl: NavController, public loadingCtrl: LoadingController,
     public myWardDataProvider: MyWardDataProvider, public imgCache: ImgCacheService,
-    private authHandler:AuthHandlerProvider) {
+    private authHandler:AuthHandlerProvider, private jsonStoreHandler:JsonStoreHandlerProvider) {
     console.log('--> HomePage constructor() called');
   }
 
@@ -46,6 +47,11 @@ export class HomePage {
   ionViewWillEnter() {
     console.log('--> HomePage ionViewWillEnter() called');
     this.initAuthChallengeHandler();
+    this.jsonStoreHandler.setOnSyncSuccessCallback(() => {
+      console.log('--> HomePage onSyncSuccessCallback() called');
+      this.loader.dismiss();
+      this.loadData();
+    });
   }
 
   loadData() {
@@ -53,8 +59,9 @@ export class HomePage {
       content: 'Loading data. Please wait ...',
     });
     this.loader.present().then(() => {
-      this.myWardDataProvider.load().then(data => {
-        this.myWardDataProvider.getObjectStorageAccess().then(objectStorageAccess => {
+      this.jsonStoreHandler.getData().then(data => {
+        this.grievances = data;
+        this.jsonStoreHandler.getObjectStorageAccess().then(objectStorageAccess => {
           this.objectStorageAccess = objectStorageAccess;
           this.imgCache.init({
             headers: {
@@ -63,8 +70,10 @@ export class HomePage {
           }).then( () => {
             console.log('--> HomePage initialized imgCache');
             this.loader.dismiss();
-            this.grievances = data;
           });
+        },(failure) => {
+          console.log('--> HomePage error: ' + failure);
+          this.loader.dismiss();
         });
       });
     });
@@ -80,7 +89,7 @@ export class HomePage {
   }
 
   refresh() {
-    this.myWardDataProvider.data = null;
+    // this.jsonStoreHandler.syncMyWardData();
     this.loadData();
   }
 

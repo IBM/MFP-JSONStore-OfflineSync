@@ -32,6 +32,7 @@ import { ProblemDetailPage } from '../pages/problem-detail/problem-detail';
 import { ReportNewPage } from '../pages/report-new/report-new';
 import { AuthHandlerProvider } from '../providers/auth-handler/auth-handler';
 import { MyWardDataProvider } from '../providers/my-ward-data/my-ward-data';
+import { JsonStoreHandlerProvider } from '../providers/json-store-handler/json-store-handler';
 
 @NgModule({
   declarations: [
@@ -64,7 +65,8 @@ import { MyWardDataProvider } from '../providers/my-ward-data/my-ward-data';
     Camera,
     FileTransfer,
     ImageResizer,
-    Network
+    Network,
+    JsonStoreHandlerProvider
   ]
 })
 export class AppModule {}

@@ -39,7 +39,7 @@ export class ProblemDetailPage {
   }
 
   loadMap() {
-    let loc = new LatLng(this.grievance.geoLocation.coordinates[1], this.grievance.geoLocation.coordinates[0]);
+    let loc = new LatLng(this.grievance.json.geoLocation.coordinates[1], this.grievance.json.geoLocation.coordinates[0]);
     let mapOptions: GoogleMapOptions= {
       camera: {
         target: loc,

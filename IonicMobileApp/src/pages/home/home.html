@@ -35,10 +35,10 @@ limitations under the License.
   <ion-list>
     <button ion-item (click)="itemClick(grievance)" *ngFor="let grievance of grievances">
       <ion-thumbnail item-left>
-        <img img-cache img-cache-src="{{objectStorageAccess.baseUrl}}{{grievance.picture.thumbnail}}">
+        <img img-cache img-cache-src="{{objectStorageAccess.baseUrl}}{{grievance.json.picture.thumbnail}}">
       </ion-thumbnail>
-      <h2 text-wrap>{{grievance.problemDescription}}</h2>
-      <p>@ {{grievance.address}}</p>
+      <h2 text-wrap>{{grievance.json.problemDescription}}</h2>
+      <p>@ {{grievance.json.address}}</p>
     </button>
   </ion-list>
 </ion-content>
