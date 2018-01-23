@@ -296,3 +296,308 @@ export class LoginPage {
 }
 
 </code></pre>
+
+## Step 3. Make Home page and Detail page work in offline mode
+
+### 3.1 Use JSONStore for offline storage and syncing of data from Cloudant
+
+Update `IonicMobileApp/src/providers/json-store-handler/json-store-handler.ts` as below:
+
+<pre><code>
+...
+<b>import { MyWardDataProvider } from '../my-ward-data/my-ward-data';</b>
+...
+export class JsonStoreHandlerProvider {
+  isCollectionInitialized = {};
+  <b>onSyncSuccessCallback = null;
+  onSyncFailureCallback = null;</b>
+
+  userCredentialsCollectionName = 'userCredentials';
+  userCredentialsCollections = {
+    userCredentials: {
+      searchFields: { username: 'string' }
+    }
+  }
+
+  <b>myWardCollectionName = 'myward';
+  myWardCollections = {
+    myward: {
+      searchFields: { reportedBy: 'string' }
+    }
+  };
+  myWardCollectionOptions = {
+    syncPolicy: 0,
+    syncAdapterPath: '/adapters/JSONStoreCloudantSync/',
+    onSyncSuccess: this.onSyncSuccess.bind(this),
+    onSyncFailure: this.onSyncFailure.bind(this),
+    username: null,
+    password: null,
+    localKeyGen: true
+  };
+
+  objectStorageDetailsCollectionName = 'objectStorageDetails';
+  objectStorageDetailsCollections = {
+    objectStorageDetails: {
+      searchFields: { baseUrl: 'string' },
+    }
+  };</b>
+
+  constructor(<b>public myWardDataProvider: MyWardDataProvider</b>) {
+    console.log('--> JsonStoreHandler constructor() called');
+  }
+
+  // https://www.ibm.com/support/knowledgecenter/en/SSHS8R_8.0.0/com.ibm.worklight.apiref.doc/html/refjavascript-client/html/WL.JSONStore.html
+  initCollections(username, password, isOnline:boolean) {
+    console.log('--> JsonStoreHandler: initCollections called');
+    return new Promise( (resolve, reject) => {
+      if (username in this.isCollectionInitialized) {
+        console.log('--> JsonStoreHandler: collections have already been initialized for username: ' + username);
+        return resolve();
+      }
+      let encodedUsername = this.convertToJsonStoreCompatibleUsername(username);
+      console.log('--> JsonStoreHandler: username after encoding: ' + encodedUsername);
+
+      let options = {
+        username: encodedUsername,
+        password: password,
+        localKeyGen: true
+      }
+      WL.JSONStore.closeAll({});
+      WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
+        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection.');
+        this.isCollectionInitialized[username] = true;
+        if (isOnline) {
+          this.initCollectionForOfflineLogin();
+        }
+
+        <b>this.myWardCollectionOptions.username = encodedUsername;
+        this.myWardCollectionOptions.password = password;
+        WL.JSONStore.init(this.myWardCollections, this.myWardCollectionOptions).then((success) => {
+          console.log('--> JsonStoreHandler: successfully initialized \'' + this.myWardCollectionName + '\' JSONStore collection.');
+
+          WL.JSONStore.init(this.objectStorageDetailsCollections, options).then((success) => {
+            console.log('--> JsonStoreHandler: successfully initialized \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.');
+            if (isOnline) {
+              this.loadObjectStorageAccess.bind(this)();
+            }
+              resolve();
+          }, (failure) => {
+            console.log('--> JsonStoreHandler: failed to initialize \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
+            reject({collectionName: this.objectStorageDetailsCollectionName, failure: failure});
+          });
+
+        }, (failure) => {
+          console.log('--> JsonStoreHandler: failed to initialize \'' + this.myWardCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
+          reject({collectionName: this.myWardCollectionName, failure: failure});
+        });</b>
+
+      }, (failure) => {
+        if (isOnline) {
+          console.log('--> JsonStoreHandler: password change detected for user: ' + username + ' . Destroying old JSONStore so as to recreate it.\n', JSON.stringify(failure));
+          WL.JSONStore.destroy(encodedUsername).then(() => {
+            this.initCollections(username, password, isOnline);
+          });
+        } else {
+          console.log('--> JsonStoreHandler: failed to initialize \'' + this.userCredentialsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
+          reject({collectionName: this.userCredentialsCollectionName, failure: failure});
+        }
+      });
+    });
+  }
+
+  ...
+
+  <b>getData() {
+    return new Promise( (resolve, reject) => {
+      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
+      collectionInstance.findAll('{}').then((data) => {
+        console.log('--> JsonStoreHandler: data returned from JSONStore = \n', data);
+        resolve(data);
+      });
+    });
+  }
+
+  onSyncSuccess(data) {
+    console.log('--> JsonStoreHandler: data received from sync = \n', data);
+    if (this.onSyncSuccessCallback != null) {
+      this.onSyncSuccessCallback();
+    } else {
+      console.log('--> JsonStoreHandler: onSyncSuccessCallback not set!');
+    }
+  }
+
+  onSyncFailure(error) {
+    console.log('--> JsonStoreHandler: sync failed\n', error);
+    if (this.onSyncFailureCallback != null) {
+      this.onSyncFailureCallback(error);
+    } else {
+      console.log('--> JsonStoreHandler: onSyncFailureCallback not set!');
+    }
+  }
+
+  setOnSyncSuccessCallback(onSyncSuccess) {
+    this.onSyncSuccessCallback = onSyncSuccess;
+  }
+
+  setOnSyncFailureCallback(onSyncFailure) {
+    this.onSyncFailureCallback = onSyncFailure;
+  }
+
+  syncMyWardData() {
+    let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
+    collectionInstance.sync();
+  }
+
+  loadObjectStorageAccess() {
+    this.myWardDataProvider.getObjectStorageAccess().then(objectStorageAccess => {
+      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
+      collectionInstance.clear({}).then(() => {
+        collectionInstance.add(objectStorageAccess, {}).then((noOfDocs) => {
+          console.log('--> JsonStoreHandler: loadObjectStorageAccess successful.');
+          if (this.onSyncSuccessCallback != null) {
+            this.onSyncSuccessCallback();
+          } else {
+            console.log('--> JsonStoreHandler loadObjectStorageAccess(): onSyncSuccessCallback not set!');
+          }
+        }, (failure) => {
+          console.log('--> JsonStoreHandler: loadObjectStorageAccess failed\n', failure);
+        });
+      });
+    }, (failure) => {
+      // console.log('--> JsonStoreHandler: loadObjectStorageAccess failed\n', failure);
+    });
+  }
+
+  getObjectStorageAccess() {
+    return new Promise( (resolve, reject) => {
+      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
+      collectionInstance.findAll({}).then((results) => {
+        if (results.length > 0) {
+          resolve(results[0].json);
+        } else {
+          resolve({baseUrl: '', authorizationHeader: ''});
+          // reject('Did not find document containing objectStorageAccess.');
+        }
+      }, (failure) => {
+        reject(failure);
+      });
+    });
+  }</b>
+}
+
+</code></pre>
+
+### 3.2 Update Home page to load data from JSONStore
+
+<pre><code>
+...
+<b>import { JsonStoreHandlerProvider } from '../../providers/json-store-handler/json-store-handler';</b>
+...
+export class HomePage {
+  ...
+
+  constructor(public navCtrl: NavController, public loadingCtrl: LoadingController,
+    public myWardDataProvider: MyWardDataProvider, public imgCache: ImgCacheService,
+    private authHandler:AuthHandlerProvider<b>, private jsonStoreHandler:JsonStoreHandlerProvider</b>) {
+    console.log('--> HomePage constructor() called');
+  }
+
+  ...
+
+  ionViewWillEnter() {
+    console.log('--> HomePage ionViewWillEnter() called');
+    this.initAuthChallengeHandler();
+    <b>this.jsonStoreHandler.setOnSyncSuccessCallback(() => {
+      console.log('--> HomePage onSyncSuccessCallback() called');
+      this.loader.dismiss();
+      this.loadData();
+    });</b>
+  }
+
+  loadData() {
+    this.loader = this.loadingCtrl.create({
+      content: 'Loading data. Please wait ...',
+    });
+    this.loader.present().then(() => {
+      <b>this.jsonStoreHandler.getData().then(data => {
+        this.grievances = data;
+        this.jsonStoreHandler.getObjectStorageAccess().then(objectStorageAccess => {
+          this.objectStorageAccess = objectStorageAccess;
+          this.imgCache.init({
+            headers: {
+              'Authorization': this.objectStorageAccess.authorizationHeader
+            }
+          }).then( () => {
+            console.log('--> HomePage initialized imgCache');
+            this.loader.dismiss();
+          });
+        },(failure) => {
+          console.log('--> HomePage error: ' + failure);
+          this.loader.dismiss();
+        });
+      });</b>
+    });
+  }
+
+  ...
+
+  refresh() {
+    <b>this.jsonStoreHandler.syncMyWardData();</b>
+  }
+
+  ...
+}
+</code></pre>
+
+### 3.3 Update views to take care of data wrapping by JSONStore
+
+JSONStore wraps our data inside a `json` element as shown below.
+```
+[
+  { _id: 1, json: {problemDescription: '...', address: '...', ...} },
+  { _id: 2, json: {problemDescription: '...', address: '...', ...} },
+  ...
+]
+```
+
+Hence, we need to update the references to our data in views/pages as shown below.
+
+Update `IonicMobileApp/src/pages/home/home.html` as below:
+
+<pre><code>
+...
+&lt;ion-content padding&gt;
+  &lt;ion-list&gt;
+    &lt;button ion-item (click)="itemClick(grievance)" *ngFor="let grievance of grievances"&gt;
+      &lt;ion-thumbnail item-left&gt;
+        &lt;img img-cache img-cache-src="{{objectStorageAccess.baseUrl}}<b>{{grievance.json.picture.thumbnail}}</b>"&gt;
+      &lt;/ion-thumbnail&gt;
+      &lt;h2 text-wrap&gt;<b>{{grievance.json.problemDescription}}</b>&lt;/h2&gt;
+      &lt;p&gt;@ <b>{{grievance.json.address}}</b>&lt;/p&gt;
+    &lt;/button&gt;
+  &lt;/ion-list&gt;
+&lt;/ion-content&gt;
+</code></pre>
+
+Update `IonicMobileApp/src/pages/problem-detail/problem-detail.html` as below:
+
+<pre><code>
+...
+&lt;ion-content padding&gt;
+  &lt;h2 text-wrap&gt;<b>{{grievance.json.problemDescription}}</b>&lt;/h2&gt;
+  &lt;p&gt;Reported on: <b>{{grievance.json.reportedDateTime}}</b>&lt;/p&gt;
+  &lt;img img-cache img-cache-src="{{baseUrl}}<b>{{grievance.json.picture.large}}</b>"&gt;
+  &lt;p text-wrap&gt;@ <b>{{grievance.json.address}}</b>&lt;/p&gt;
+  &lt;div id="map"&gt;&lt;/div&gt;
+&lt;/ion-content&gt;
+</code></pre>
+
+Update `IonicMobileApp/src/pages/problem-detail/problem-detail.ts` as below:
+
+<pre><code>
+  ...
+  loadMap() {
+    let loc = new LatLng(<b>this.grievance.json.geoLocation.coordinates[1], this.grievance.json.geoLocation.coordinates[0]</b>);
+    ...
+  }
+</code></pre>
