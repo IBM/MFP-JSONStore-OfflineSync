@@ -420,6 +420,7 @@ export class JsonStoreHandlerProvider {
 
   onSyncSuccess(data) {
     console.log('--> JsonStoreHandler onSyncSuccess: ' + data);
+    // TODO onSyncSuccessCallback should be called only if data has changed
     if (this.onSyncSuccessCallback != null) {
       this.onSyncSuccessCallback();
     } else {
@@ -448,24 +449,40 @@ export class JsonStoreHandlerProvider {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
     collectionInstance.sync();
   }
-
   loadObjectStorageAccess() {
     this.myWardDataProvider.getObjectStorageAccess().then(objectStorageAccess => {
       let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
-      collectionInstance.clear({}).then(() => {
-        collectionInstance.add(objectStorageAccess, {}).then((noOfDocs) => {
-          console.log('--> JsonStoreHandler: loadObjectStorageAccess successful.');
-          if (this.onSyncSuccessCallback != null) {
-            this.onSyncSuccessCallback();
-          } else {
-            console.log('--> JsonStoreHandler loadObjectStorageAccess(): onSyncSuccessCallback not set!');
-          }
-        }, (failure) => {
-          console.log('--> JsonStoreHandler loadObjectStorageAccess(): add to JSONStore failed\n', failure);
-        });
+      this.hasObjectStorageAccessChanged(objectStorageAccess).then((hasChanged) => {
+        if (hasChanged) {
+          collectionInstance.clear({}).then(() => {
+            collectionInstance.add(objectStorageAccess, {}).then((noOfDocs) => {
+              console.log('--> JsonStoreHandler objectStorageAccess successfully updated!');
+              if (this.onSyncSuccessCallback != null) {
+                this.onSyncSuccessCallback();
+              } else {
+                console.log('--> JsonStoreHandler loadObjectStorageAccess(): onSyncSuccessCallback not set!');
+              }
+            }, (failure) => {
+              console.log('--> JsonStoreHandler loadObjectStorageAccess(): add to JSONStore failed\n', failure);
+            });
+          });
+        } else {
+          console.log('--> JsonStoreHandler: objectStorageAccess has not changed.');
+        }
       });
-    }, (failure) => {
-      // console.log('--> JsonStoreHandler: loadObjectStorageAccess failed\n', failure);
+    });
+  }
+
+  hasObjectStorageAccessChanged(newObjectStorageAccess) {
+    return new Promise( (resolve, reject) => {
+      this.getObjectStorageAccess().then((oldObjectStorageAccess: any) => {
+        if (oldObjectStorageAccess != null && oldObjectStorageAccess.baseUrl == newObjectStorageAccess.baseUrl &&
+          oldObjectStorageAccess.authorizationHeader == newObjectStorageAccess.authorizationHeader) {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
     });
   }
 
