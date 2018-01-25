@@ -449,6 +449,7 @@ export class JsonStoreHandlerProvider {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
     collectionInstance.sync();
   }
+  
   loadObjectStorageAccess() {
     this.myWardDataProvider.getObjectStorageAccess().then(objectStorageAccess => {
       let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
