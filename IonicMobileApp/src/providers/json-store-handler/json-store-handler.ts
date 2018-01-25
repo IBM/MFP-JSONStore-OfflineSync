@@ -60,12 +60,12 @@ export class JsonStoreHandlerProvider {
 
   // https://www.ibm.com/support/knowledgecenter/en/SSHS8R_8.0.0/com.ibm.worklight.apiref.doc/html/refjavascript-client/html/WL.JSONStore.html
   initCollections(username, password, isOnline:boolean) {
-    console.log('--> JsonStoreHandler: initCollections called');
     return new Promise( (resolve, reject) => {
       if (username in this.isCollectionInitialized) {
-        console.log('--> JsonStoreHandler: collections have already been initialized for username: ' + username);
+        // console.log('--> JsonStoreHandler: collections have already been initialized for username: ' + username);
         return resolve();
       }
+      console.log('--> JsonStoreHandler: initCollections called');
       let encodedUsername = this.convertToJsonStoreCompatibleUsername(username);
       console.log('--> JsonStoreHandler: username after encoding: ' + encodedUsername);
 
@@ -92,7 +92,7 @@ export class JsonStoreHandlerProvider {
             if (isOnline) {
               this.loadObjectStorageAccess.bind(this)();
             }
-              resolve();
+            resolve();
           }, (failure) => {
             console.log('--> JsonStoreHandler: failed to initialize \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
             reject({collectionName: this.objectStorageDetailsCollectionName, failure: failure});
@@ -159,14 +159,14 @@ export class JsonStoreHandlerProvider {
     return new Promise( (resolve, reject) => {
       let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
       collectionInstance.findAll('{}').then((data) => {
-        console.log('--> JsonStoreHandler: data returned from JSONStore = \n', data);
+        console.log('--> JsonStoreHandler: data fetched from JSONStore = \n', data);
         resolve(data);
       });
     });
   }
 
   onSyncSuccess(data) {
-    console.log('--> JsonStoreHandler: data received from sync = \n', data);
+    console.log('--> JsonStoreHandler onSyncSuccess: ' + data);
     if (this.onSyncSuccessCallback != null) {
       this.onSyncSuccessCallback();
     } else {
@@ -208,7 +208,7 @@ export class JsonStoreHandlerProvider {
             console.log('--> JsonStoreHandler loadObjectStorageAccess(): onSyncSuccessCallback not set!');
           }
         }, (failure) => {
-          console.log('--> JsonStoreHandler: loadObjectStorageAccess failed\n', failure);
+          console.log('--> JsonStoreHandler loadObjectStorageAccess(): add to JSONStore failed\n', failure);
         });
       });
     }, (failure) => {
@@ -223,10 +223,10 @@ export class JsonStoreHandlerProvider {
         if (results.length > 0) {
           resolve(results[0].json);
         } else {
-          resolve({baseUrl: '', authorizationHeader: ''});
-          // reject('Did not find document containing objectStorageAccess.');
+          resolve(null);
         }
       }, (failure) => {
+        console.log('--> JsonStoreHandler: getObjectStorageAccess failed\n', failure);
         reject(failure);
       });
     });

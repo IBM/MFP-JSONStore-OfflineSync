@@ -41,6 +41,7 @@ export class HomePage {
 
   ionViewDidLoad() {
     console.log('--> HomePage ionViewDidLoad() called');
+    this.loader = null;
     this.loadData();
   }
 
@@ -49,33 +50,44 @@ export class HomePage {
     this.initAuthChallengeHandler();
     this.jsonStoreHandler.setOnSyncSuccessCallback(() => {
       console.log('--> HomePage onSyncSuccessCallback() called');
-      this.loader.dismiss();
       this.loadData();
     });
   }
 
   loadData() {
-    this.loader = this.loadingCtrl.create({
-      content: 'Loading data. Please wait ...',
-    });
-    this.loader.present().then(() => {
-      this.jsonStoreHandler.getData().then(data => {
-        this.grievances = data;
-        this.jsonStoreHandler.getObjectStorageAccess().then(objectStorageAccess => {
-          this.objectStorageAccess = objectStorageAccess;
-          this.imgCache.init({
-            headers: {
-              'Authorization': this.objectStorageAccess.authorizationHeader
-            }
-          }).then( () => {
-            console.log('--> HomePage initialized imgCache');
-            this.loader.dismiss();
-          });
-        },(failure) => {
-          console.log('--> HomePage error: ' + failure);
-          this.loader.dismiss();
-        });
+    if (this.loader == null) {
+      console.log('--> HomePage creating new loader');
+      this.loader = this.loadingCtrl.create({
+        content: 'Loading data. Please wait ...'
       });
+      this.loader.present().then(() => {
+        this.loadDataFromJsonStore();
+      });
+    } else {
+      console.log('--> HomePage reusing previous loader');
+      this.loadDataFromJsonStore();
+    }
+  }
+
+  loadDataFromJsonStore() {
+    this.jsonStoreHandler.getObjectStorageAccess().then(objectStorageAccess => {
+      if (objectStorageAccess != null) {
+        this.objectStorageAccess = objectStorageAccess;
+        this.imgCache.init({
+          headers: {
+            'Authorization': this.objectStorageAccess.authorizationHeader
+          }
+        }).then( () => {
+          console.log('--> HomePage initialized imgCache');
+          this.jsonStoreHandler.getData().then(data => {
+            this.grievances = data;
+            this.loader.dismiss();
+            this.loader = null;
+          });
+        });
+      } else {
+        console.log('--> HomePage objectStorageAccess not yet loaded');
+      }
     });
   }
 
