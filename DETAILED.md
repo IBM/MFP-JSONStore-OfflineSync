@@ -456,7 +456,7 @@ export class JsonStoreHandlerProvider {
         if (hasChanged) {
           collectionInstance.clear({}).then(() => {
             collectionInstance.add(objectStorageAccess, {}).then((noOfDocs) => {
-              console.log('--> JsonStoreHandler objectStorageAccess successfully updated!');
+              console.log('--> JsonStoreHandler objectStorageAccess successfully updated.');
               if (this.onSyncSuccessCallback != null) {
                 this.onSyncSuccessCallback();
               } else {
