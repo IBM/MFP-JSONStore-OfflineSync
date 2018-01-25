@@ -1,7 +1,7 @@
 
 ## Step 1. Use Ionic-MFP-App as a starting point for this project
 
-This project builds on top of the app built in https://github.com/IBM/Ionic-MFP-App. Here we will make the app offline-first.
+This project builds on top of the app built in https://github.com/IBM/Ionic-MFP-App. In this code pattern, we will update the app such that it is usable even when the device is offline.
 
 Copy Ionic Mobile app and Mobile Foundation adapters from parent repo as per instructions in http://bit-traveler.blogspot.in/2012/08/git-copy-file-or-directory-from-one.html as shown below.
 
