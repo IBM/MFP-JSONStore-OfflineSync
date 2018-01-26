@@ -452,9 +452,9 @@ export class JsonStoreHandlerProvider {
   
   loadObjectStorageAccess() {
     this.myWardDataProvider.getObjectStorageAccess().then(objectStorageAccess => {
-      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
       this.hasObjectStorageAccessChanged(objectStorageAccess).then((hasChanged) => {
         if (hasChanged) {
+          let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
           collectionInstance.clear({}).then(() => {
             collectionInstance.add(objectStorageAccess, {}).then((noOfDocs) => {
               console.log('--> JsonStoreHandler objectStorageAccess successfully updated.');
