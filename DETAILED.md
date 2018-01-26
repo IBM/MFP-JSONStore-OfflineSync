@@ -5,7 +5,7 @@ This project builds on top of the app built in https://github.com/IBM/Ionic-MFP-
 
 Copy Ionic Mobile app and Mobile Foundation adapters from parent repo as per instructions in http://bit-traveler.blogspot.in/2012/08/git-copy-file-or-directory-from-one.html as shown below.
 
-* Create your repo on github.com and add README.md file. Clone your new repo.
+* Create your repo on [Github.com](https://github.com) and add `README.md` file. Clone your new repo.
 
 ```
 $ git clone https://github.com/<your-username>/<your-new-repo-name>.git
@@ -228,7 +228,7 @@ export class AuthHandlerProvider {
 
 ### 2.2 Update login page to call JSONStore based login when device is offline
 
-http://ionicframework.com/docs/native/network/
+https://ionicframework.com/docs/native/network/
 
 Install the Cordova and Ionic plugins for Network information:
 
@@ -275,7 +275,7 @@ export class LoginPage {
       return;
     }
     this.loader = this.loadingCtrl.create({
-      content: 'Signining in. Please wait ...',
+      content: 'Signing in. Please wait ...',
       dismissOnPageChange: true
     });
     this.loader.present().then(() => {
