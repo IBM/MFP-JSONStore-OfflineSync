@@ -17,6 +17,7 @@
 
 import { Injectable } from '@angular/core';
 import { MyWardDataProvider } from '../my-ward-data/my-ward-data';
+import { Network } from '@ionic-native/network';
 
 @Injectable()
 export class JsonStoreHandlerProvider {
@@ -24,8 +25,21 @@ export class JsonStoreHandlerProvider {
   onSyncSuccessCallback = null;
   onSyncFailureCallback = null;
 
-  constructor(public myWardDataProvider: MyWardDataProvider) {
+  constructor(private network: Network, public myWardDataProvider: MyWardDataProvider) {
     console.log('--> JsonStoreHandler constructor() called');
+    this.network.onConnect().subscribe(() => {
+      console.log('--> JsonStoreHandlerProvider: Network connected!');
+      // We just got a connection but we need to wait briefly
+      // before we determine the connection type. Might need to wait.
+      // prior to doing any api requests as well.
+      setTimeout(() => {
+        if (this.network.type != 'none') {
+          this.initUpstreamSync();
+          this.syncMyWardData();
+          this.myWardDataProvider.uploadOfflineImages();
+        }
+      }, 3000);
+    });
   }
 
   userCredentialsCollectionName = 'userCredentials';
@@ -43,9 +57,25 @@ export class JsonStoreHandlerProvider {
   };
   myWardCollectionOptions = {
     syncPolicy: 0,
-    syncAdapterPath: '/adapters/JSONStoreCloudantSync/',
+    syncAdapterPath:'CloudantJava',
     onSyncSuccess: this.onSyncSuccess.bind(this),
     onSyncFailure: this.onSyncFailure.bind(this),
+    username: null,
+    password: null,
+    localKeyGen: true
+  };
+
+  newProblemsCollectionName = 'newproblems';
+  newProblemsCollections = {
+    newproblems: {
+      searchFields: { problemDescription: 'string' }
+    }
+  };
+  newProblemsCollectionOptions = {
+    syncPolicy: 1,
+    syncAdapterPath:'CloudantJava',
+    onSyncSuccess: this.onUpstreamSyncSuccess.bind(this),
+    onSyncFailure: this.onUpstreamSyncFailure.bind(this),
     username: null,
     password: null,
     localKeyGen: true
@@ -92,7 +122,16 @@ export class JsonStoreHandlerProvider {
             if (isOnline) {
               this.loadObjectStorageAccess.bind(this)();
             }
-            resolve();
+
+            this.newProblemsCollectionOptions.username = encodedUsername;
+            this.newProblemsCollectionOptions.password = password;
+            WL.JSONStore.init(this.newProblemsCollections, this.newProblemsCollectionOptions).then((success) => {
+              console.log('--> JsonStoreHandler: successfully initialized \'' + this.newProblemsCollectionName + '\' JSONStore collection.');
+              resolve();
+            }, (failure) => {
+              console.log('--> JsonStoreHandler: failed to initialize \'' + this.newProblemsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
+              reject({collectionName: this.newProblemsCollectionName, failure: failure});
+            });
           }, (failure) => {
             console.log('--> JsonStoreHandler: failed to initialize \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
             reject({collectionName: this.objectStorageDetailsCollectionName, failure: failure});
@@ -165,8 +204,8 @@ export class JsonStoreHandlerProvider {
     });
   }
 
-  onSyncSuccess(data) {
-    console.log('--> JsonStoreHandler onSyncSuccess: ' + data);
+  onSyncSuccess(msg) {
+    console.log('--> JsonStoreHandler onSyncSuccess: ' + msg);
     // TODO onSyncSuccessCallback should be called only if data has changed
     if (this.onSyncSuccessCallback != null) {
       this.onSyncSuccessCallback();
@@ -175,10 +214,10 @@ export class JsonStoreHandlerProvider {
     }
   }
 
-  onSyncFailure(error) {
-    console.log('--> JsonStoreHandler: sync failed\n', error);
+  onSyncFailure(msg) {
+    console.log('--> JsonStoreHandler: sync failed\n', msg);
     if (this.onSyncFailureCallback != null) {
-      this.onSyncFailureCallback(error);
+      this.onSyncFailureCallback(msg);
     } else {
       console.log('--> JsonStoreHandler: onSyncFailureCallback not set!');
     }
@@ -192,9 +231,30 @@ export class JsonStoreHandlerProvider {
     this.onSyncFailureCallback = onSyncFailure;
   }
 
+  onUpstreamSyncSuccess(data) {
+    console.log('--> JsonStoreHandler onUpstreamSyncSuccess: ' + data);
+  }
+
+  onUpstreamSyncFailure(error) {
+    console.log('--> JsonStoreHandler: upstream sync failed\n', error);
+  }
+
   syncMyWardData() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
-    // collectionInstance.sync();
+    collectionInstance.sync({}).then(() => {
+      console.log('--> JsonStoreHandler downstream sync initiated');
+    }, (failure) => {
+      console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + failure);
+    });
+  }
+
+  initUpstreamSync() {
+    let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
+    collectionInstance.sync({}).then(() => {
+      console.log('--> JsonStoreHandler upstream sync initiated');
+    }, (failure) => {
+      console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + failure);
+    });
   }
 
   loadObjectStorageAccess() {
@@ -249,4 +309,19 @@ export class JsonStoreHandlerProvider {
       });
     });
   }
+
+  addNewGrievance(grievance) {
+    return new Promise( (resolve, reject) => {
+      console.log('--> JsonStoreHandler: adding following new grievance to JSONStore ...\n' + JSON.stringify(grievance));
+      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
+      collectionInstance.add(grievance, {}).then((noOfDocs) => {
+        console.log('--> JsonStoreHandler added new grievance.');
+        resolve();
+      }, (failure) => {
+        console.log('--> JsonStoreHandler addNewGrievance failed\n', failure);
+        reject(failure);
+      });
+    });
+  }
+
 }

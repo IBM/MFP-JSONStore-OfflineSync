@@ -21,6 +21,7 @@ import { ImageResizer, ImageResizerOptions } from '@ionic-native/image-resizer';
 
 import { MyWardDataProvider } from '../../providers/my-ward-data/my-ward-data';
 import { AuthHandlerProvider } from '../../providers/auth-handler/auth-handler';
+import { JsonStoreHandlerProvider } from '../../providers/json-store-handler/json-store-handler';
 import { LoginPage } from '../login/login';
 
 // @IonicPage()
@@ -40,7 +41,8 @@ export class ReportNewPage {
   constructor(public navCtrl: NavController, public navParams: NavParams,
     private camera : Camera, private alertCtrl: AlertController, private imageResizer: ImageResizer,
     private loadingCtrl: LoadingController, private toastCtrl: ToastController,
-    private myWardDataProvider: MyWardDataProvider, private authHandler:AuthHandlerProvider) {
+    private myWardDataProvider: MyWardDataProvider, private authHandler:AuthHandlerProvider,
+    private jsonStoreHandler:JsonStoreHandlerProvider) {
     console.log('--> ReportNewPage constructor() called');
   }
 
@@ -56,8 +58,8 @@ export class ReportNewPage {
       quality: 90, // picture quality
       destinationType: this.camera.DestinationType.FILE_URI,
       encodingType: this.camera.EncodingType.JPEG,
-      mediaType: this.camera.MediaType.PICTURE,
-      correctOrientation: true
+      correctOrientation: true,
+      saveToPhotoAlbum: true
     }
     this.camera.getPicture(options) .then((imageData) => {
         // this.capturedImage = "data:image/jpeg;base64," + imageData;
@@ -197,7 +199,7 @@ export class ReportNewPage {
       dismissOnPageChange: true
     });
     this.loader.present().then(() => {
-      this.myWardDataProvider.uploadNewGrievance(grievance).then(
+      this.jsonStoreHandler.addNewGrievance(grievance).then(
         (response) => {
           this.loader.dismiss();
           this.showToast('Data Uploaded Successfully');
@@ -215,7 +217,7 @@ export class ReportNewPage {
                         this.loader.dismiss();
                         this.showToast('Image Uploaded Successfully');
                         this.showAlert('Upload Successful', 'Successfully uploaded problem report to server', false, () => {
-                          this.myWardDataProvider.data.push(grievance);
+                          // this.myWardDataProvider.data.push(grievance);
                           this.navCtrl.pop();
                         })
                       }, (failure) => {

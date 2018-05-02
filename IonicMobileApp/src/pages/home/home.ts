@@ -83,6 +83,7 @@ export class HomePage {
             this.grievances = data;
             this.loader.dismiss();
             this.loader = null;
+            this.myWardDataProvider.uploadOfflineImages();
           });
         });
       } else {
@@ -101,8 +102,8 @@ export class HomePage {
   }
 
   refresh() {
-    // this.jsonStoreHandler.syncMyWardData();
-    this.loadData();
+    this.jsonStoreHandler.syncMyWardData();
+    // this.loadData();
   }
 
   initAuthChallengeHandler() {

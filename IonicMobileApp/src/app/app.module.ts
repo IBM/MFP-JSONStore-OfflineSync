@@ -21,6 +21,7 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { ImgCacheModule } from 'ng-imgcache';
 import { GoogleMaps } from '@ionic-native/google-maps';
 import { Camera } from '@ionic-native/camera';
+import { File } from '@ionic-native/file';
 import { FileTransfer } from '@ionic-native/file-transfer';
 import { ImageResizer } from '@ionic-native/image-resizer';
 import { Network } from '@ionic-native/network';
@@ -63,6 +64,7 @@ import { JsonStoreHandlerProvider } from '../providers/json-store-handler/json-s
     MyWardDataProvider,
     GoogleMaps,
     Camera,
+    File,
     FileTransfer,
     ImageResizer,
     Network,
