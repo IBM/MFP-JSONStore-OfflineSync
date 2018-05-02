@@ -779,6 +779,7 @@ export class ReportNewPage {
   submit() {
     ...
     this.loader.present().then(() => {
+      // <del>this.myWardDataProvider.uploadNewGrievance(grievance).then(</del>
       <b>this.jsonStoreHandler.addNewGrievance(grievance)</b>.then(
         (response) => {
           this.loader.dismiss();
