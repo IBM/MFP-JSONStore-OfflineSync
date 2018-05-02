@@ -328,7 +328,7 @@ export class JsonStoreHandlerProvider {
   };
   myWardCollectionOptions = {
     syncPolicy: 0,
-    syncAdapterPath: '/adapters/JSONStoreCloudantSync/',
+    syncAdapterPath: 'JSONStoreCloudantSync',
     onSyncSuccess: this.onSyncSuccess.bind(this),
     onSyncFailure: this.onSyncFailure.bind(this),
     username: null,
@@ -447,7 +447,11 @@ export class JsonStoreHandlerProvider {
 
   syncMyWardData() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
-    collectionInstance.sync();
+    collectionInstance.sync({}).then(() => {
+      console.log('--> JsonStoreHandler downstream sync initiated');
+    }, (failure) => {
+      console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + failure);
+    });
   }
   
   loadObjectStorageAccess() {
