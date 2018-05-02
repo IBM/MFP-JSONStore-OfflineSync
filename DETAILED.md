@@ -512,6 +512,8 @@ export class JsonStoreHandlerProvider {
 
 ### 3.2 Update Home page to load data from JSONStore
 
+Update `IonicMobileApp/src/pages/home/home.ts` as below:
+
 <pre><code>
 ...
 <b>import { JsonStoreHandlerProvider } from '../../providers/json-store-handler/json-store-handler';</b>
