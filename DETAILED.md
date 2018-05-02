@@ -708,11 +708,11 @@ export class JsonStoreHandlerProvider {
             this.newProblemsCollectionOptions.password = password;
             WL.JSONStore.init(this.newProblemsCollections, this.newProblemsCollectionOptions).then((success) => {
               console.log('--> JsonStoreHandler: successfully initialized \'' + this.newProblemsCollectionName + '\' JSONStore collection.');
+              resolve();
             }, (failure) => {
               console.log('--> JsonStoreHandler: failed to initialize \'' + this.newProblemsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
               reject({collectionName: this.newProblemsCollectionName, failure: failure});
-            });
-            resolve();</b>
+            });</b>
           }, (failure) => {
             ...
           });
@@ -780,7 +780,39 @@ export class ReportNewPage {
     ...
     this.loader.present().then(() => {
       <b>this.jsonStoreHandler.addNewGrievance(grievance)</b>.then(
-        ...
+        (response) => {
+          this.loader.dismiss();
+          this.showToast('Data Uploaded Successfully');
+          this.loader = this.loadingCtrl.create({
+            content: 'Uploading image to server. Please wait ...',
+            dismissOnPageChange: true
+          });
+          this.loader.present().then(() => {
+            this.myWardDataProvider.uploadImage(imageFilename, this.capturedImage).then(
+              (response) => {
+                this.imageResizer.resize(this.getImageResizerOptions()).then(
+                  (filePath: string) => {
+                    this.myWardDataProvider.uploadImage(thumbnailImageFilename, filePath).then(
+                      (response) => {
+                        this.loader.dismiss();
+                        this.showToast('Image Uploaded Successfully');
+                        this.showAlert('Upload Successful', 'Successfully uploaded problem report to server', false, () => {
+                          <b>// this.myWardDataProvider.data.push(grievance);</b>
+                          this.navCtrl.pop();
+                        })
+                      }, (failure) => {
+                        ...
+                    });
+                  }).catch(e => {
+                    ...
+                  });
+              }, (failure) => {
+                ...
+              });
+          });
+        }, (failure) => {
+          ...
+        }
       );
     });
   }
@@ -790,8 +822,8 @@ export class ReportNewPage {
 Update `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` as below:
 
 <pre><code>
-import { File } from '@ionic-native/file';
-import { Network } from '@ionic-native/network';
+<b>import { File } from '@ionic-native/file';
+import { Network } from '@ionic-native/network';</b>
 ...
 export class MyWardDataProvider {
   ...
@@ -921,4 +953,35 @@ Update `IonicMobileApp/src/app/app.module.ts` as below:
   ]
 })
 ...
+</code></pre>
+
+Update `IonicMobileApp/src/pages/home/home.ts` as below:
+
+<pre><code>
+...
+export class HomePage {
+  ...
+  loadDataFromJsonStore() {
+    this.jsonStoreHandler.getObjectStorageAccess().then(objectStorageAccess => {
+      if (objectStorageAccess != null) {
+        this.objectStorageAccess = objectStorageAccess;
+        this.imgCache.init({
+          headers: {
+            'Authorization': this.objectStorageAccess.authorizationHeader
+          }
+        }).then( () => {
+          console.log('--> HomePage initialized imgCache');
+          this.jsonStoreHandler.getData().then(data => {
+            this.grievances = data;
+            this.loader.dismiss();
+            this.loader = null;
+            <b>this.myWardDataProvider.uploadOfflineImages();</b>
+          });
+        });
+      } else {
+        console.log('--> HomePage objectStorageAccess not yet loaded');
+      }
+    });
+  }
+}
 </code></pre>
