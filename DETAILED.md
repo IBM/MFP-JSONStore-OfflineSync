@@ -298,9 +298,12 @@ export class LoginPage {
 
 </code></pre>
 
-## Step 3. Make Home page and Detail page work in offline mode
+## Step 3. Make Home page and Detail page work in offline mode (downstream sync)
 
-### 3.1 Use JSONStore for offline storage and syncing of data from Cloudant
+### 3.1 Deploy MFP adapter that synchronizes data between Cloudant and JSONStore
+
+
+### 3.2 Use JSONStore for offline storage and syncing of data from Cloudant
 
 Update `IonicMobileApp/src/providers/json-store-handler/json-store-handler.ts` as below:
 
@@ -510,7 +513,7 @@ export class JsonStoreHandlerProvider {
 
 </code></pre>
 
-### 3.2 Update Home page to load data from JSONStore
+### 3.3 Update Home page to load data from JSONStore
 
 Update `IonicMobileApp/src/pages/home/home.ts` as below:
 
@@ -589,7 +592,7 @@ export class HomePage {
 }
 </code></pre>
 
-### 3.3 Update views to take care of data wrapping by JSONStore
+### 3.4 Update views to take care of data wrapping by JSONStore
 
 JSONStore wraps our data inside a `json` element as shown below.
 ```
@@ -640,4 +643,282 @@ Update `IonicMobileApp/src/pages/problem-detail/problem-detail.ts` as below:
     let loc = new LatLng(<b>this.grievance.json.geoLocation.coordinates[1], this.grievance.json.geoLocation.coordinates[0]</b>);
     ...
   }
+</code></pre>
+
+
+## Step 4. Support reporting of new problems in offline mode (upstream sync)
+
+Update `IonicMobileApp/src/providers/json-store-handler/json-store-handler.ts` as below:
+
+<pre><code>
+...
+<b>import { Network } from '@ionic-native/network';</b>
+...
+export class JsonStoreHandlerProvider {
+  ...
+  constructor(<b>private network: Network, </b>public myWardDataProvider: MyWardDataProvider) {
+    console.log('--> JsonStoreHandler constructor() called');
+    <b>this.network.onConnect().subscribe(() => {
+      console.log('--> JsonStoreHandlerProvider: Network connected!');
+      // We just got a connection but we need to wait briefly
+      // before we determine the connection type. Might need to wait.
+      // prior to doing any api requests as well.
+      setTimeout(() => {
+        if (this.network.type != 'none') {
+          this.initUpstreamSync();
+          this.syncMyWardData();
+          this.myWardDataProvider.uploadOfflineImages();
+        }
+      }, 3000);
+    });</b>
+  }
+  ...
+
+  <b>newProblemsCollectionName = 'newproblems';
+  newProblemsCollections = {
+    newproblems: {
+      searchFields: { problemDescription: 'string' }
+    }
+  };
+  newProblemsCollectionOptions = {
+    syncPolicy: 1,
+    syncAdapterPath:'JSONStoreCloudantSync',
+    onSyncSuccess: this.onUpstreamSyncSuccess.bind(this),
+    onSyncFailure: this.onUpstreamSyncFailure.bind(this),
+    username: null,
+    password: null,
+    localKeyGen: true
+  };</b>
+  ...
+
+  initCollections(username, password, isOnline:boolean) {
+    return new Promise( (resolve, reject) => {
+      ...
+      WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
+        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection.');
+        ...
+        WL.JSONStore.init(this.myWardCollections, this.myWardCollectionOptions).then((success) => {
+          console.log('--> JsonStoreHandler: successfully initialized \'' + this.myWardCollectionName + '\' JSONStore collection.');
+          WL.JSONStore.init(this.objectStorageDetailsCollections, options).then((success) => {
+            console.log('--> JsonStoreHandler: successfully initialized \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.');
+            if (isOnline) {
+              this.loadObjectStorageAccess.bind(this)();
+            }
+            <b>this.newProblemsCollectionOptions.username = encodedUsername;
+            this.newProblemsCollectionOptions.password = password;
+            WL.JSONStore.init(this.newProblemsCollections, this.newProblemsCollectionOptions).then((success) => {
+              console.log('--> JsonStoreHandler: successfully initialized \'' + this.newProblemsCollectionName + '\' JSONStore collection.');
+            }, (failure) => {
+              console.log('--> JsonStoreHandler: failed to initialize \'' + this.newProblemsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
+              reject({collectionName: this.newProblemsCollectionName, failure: failure});
+            });
+            resolve();</b>
+          }, (failure) => {
+            ...
+          });
+        }, (failure) => {
+          ...
+        });
+      }, (failure) => {
+        ...
+      });
+    });
+  }
+  ...
+
+  <b>initUpstreamSync() {
+    let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
+    collectionInstance.sync({}).then(() => {
+      console.log('--> JsonStoreHandler upstream sync initiated');
+    }, (failure) => {
+      console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + failure);
+    });
+  }
+
+  onUpstreamSyncSuccess(data) {
+    console.log('--> JsonStoreHandler onUpstreamSyncSuccess: ' + data);
+  }
+
+  onUpstreamSyncFailure(error) {
+    console.log('--> JsonStoreHandler: upstream sync failed\n', error);
+  }
+
+  addNewGrievance(grievance) {
+    return new Promise( (resolve, reject) => {
+      console.log('--> JsonStoreHandler: adding following new grievance to JSONStore ...\n' + JSON.stringify(grievance));
+      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
+      collectionInstance.add(grievance, {}).then((noOfDocs) => {
+        console.log('--> JsonStoreHandler added new grievance.');
+        resolve();
+      }, (failure) => {
+        console.log('--> JsonStoreHandler addNewGrievance failed\n', failure);
+        reject(failure);
+      });
+    });
+  }</b>
+}
+</code></pre>
+
+Update `IonicMobileApp/src/pages/report-new/report-new.ts` as below:
+
+<pre><code>
+...
+<b>import { JsonStoreHandlerProvider } from '../../providers/json-store-handler/json-store-handler';</b>
+...
+export class ReportNewPage {
+  ...
+  constructor(public navCtrl: NavController, public navParams: NavParams,
+    private camera : Camera, private alertCtrl: AlertController, private imageResizer: ImageResizer,
+    private loadingCtrl: LoadingController, private toastCtrl: ToastController,
+    private myWardDataProvider: MyWardDataProvider, private authHandler:AuthHandlerProvider<b>,
+    private jsonStoreHandler:JsonStoreHandlerProvider</b>) {
+    console.log('--> ReportNewPage constructor() called');
+  }
+  ...
+  
+  submit() {
+    ...
+    this.loader.present().then(() => {
+      <b>this.jsonStoreHandler.addNewGrievance(grievance)</b>.then(
+        ...
+      );
+    });
+  }
+}
+</code></pre>
+
+Update `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` as below:
+
+<pre><code>
+import { File } from '@ionic-native/file';
+import { Network } from '@ionic-native/network';
+...
+export class MyWardDataProvider {
+  ...
+  constructor(private transfer: FileTransfer<b>, private file: File, private network: Network</b>) {
+    console.log('--> MyWardDataProvider constructor() called');
+    <b>this.createOfflineImagesDirIfNotExists();</b>
+  }
+  ...
+
+  <b>hasNetworkConnection() {
+    // https://ionicframework.com/docs/native/network/
+    return this.network.type !== 'none';
+  }
+
+  offlineImagesDir : string = 'offlineImagesDir';
+  offlineImagesDirEntry = null;
+
+  createOfflineImagesDirIfNotExists() {
+    this.file.checkDir(this.file.dataDirectory, this.offlineImagesDir).then(_ => {
+      console.log('--> MyWardDataProvider: Directory ' + this.offlineImagesDir + ' exists');
+      this.file.resolveDirectoryUrl(this.file.dataDirectory).then((baseDirEntry) => {
+        this.file.getDirectory(baseDirEntry, this.offlineImagesDir, {}).then((dirEntry) => {
+          this.offlineImagesDirEntry = dirEntry;
+          console.log('--> MyWardDataProvider: Successfully resolved directory ' + this.offlineImagesDir);
+        }).catch((err) => {
+          console.log('--> MyWardDataProvider: Error getting directory ' + this.offlineImagesDir + ':\n' + JSON.stringify(err));
+        });
+      }).catch((err) => {
+        console.log('--> MyWardDataProvider: Error resolving directory URL ' + this.file.dataDirectory + ':\n' + JSON.stringify(err));
+      });
+    }).catch(err => {
+      console.log('--> MyWardDataProvider: Creating directory ' + this.offlineImagesDir + ' ...');
+      this.file.createDir(this.file.dataDirectory, this.offlineImagesDir, false).then((dirEntry) => {
+        this.offlineImagesDirEntry = dirEntry;
+        console.log('--> MyWardDataProvider: Successfully created directory ' + this.offlineImagesDir);
+      }).catch(err => {
+        console.log('--> MyWardDataProvider: Error creating directory ' + this.offlineImagesDir + ':\n' + JSON.stringify(err));
+      });
+    });
+  }
+
+  saveImageInOfflineDir(fileName, filePath) {
+    return new Promise( (resolve, reject) => {
+      (window as any).resolveLocalFileSystemURL(filePath, (entry) => {
+        console.log('--> MyWardDataProvider: Copying ' + entry.nativeURL + ' to ' + this.file.dataDirectory + this.offlineImagesDir + '/' + fileName + ' ...');
+        entry.copyTo(this.offlineImagesDirEntry, fileName, (newEntry) => {
+          console.log('--> MyWardDataProvider: Successfully copied file to path {{' + newEntry.filesystem.name + '}}/' + newEntry.fullPath);
+          resolve("");
+        }, (err) => {
+          console.log('--> MyWardDataProvider: copyTo failed: ' + JSON.stringify(err));
+          reject(err);
+        });
+      }, (err) => {
+        console.log('--> MyWardDataProvider: Error during resolveLocalFileSystemURL: ' + JSON.stringify(err));
+        reject(err);
+      });
+    });
+  }
+
+  uploadOfflineImages() {
+    if (!this.hasNetworkConnection()) {
+      return;
+    }
+    console.log('--> MyWardDataProvider: Listing images to be uploaded in  ' + this.offlineImagesDir+ ' ...');
+    this.file.listDir(this.file.dataDirectory, this.offlineImagesDir).then((entries) => {
+      entries.forEach((entry) => {
+        console.log('--> MyWardDataProvider: Uploading image ' + entry.name + ' ...');
+        this.uploadImage(entry.name, entry.nativeURL).then(() => {
+          console.log('--> MyWardDataProvider: Removing cached file ' + entry.nativeURL + ' ...');
+          entry.remove(() => {
+            console.log('--> MyWardDataProvider: Successfully removed cached file ' + entry.nativeURL);
+          }, (err) => {
+            console.log('--> MyWardDataProvider: Error removing cached file:\n' + JSON.stringify(err));
+          });
+        });
+      });
+    }).catch((err) => {
+      console.log('--> MyWardDataProvider: Error listing files in uploadOfflineImages: ' + JSON.stringify(err));
+    });
+  }</b>
+
+  uploadImage(fileName, filePath) {
+    <b>if (!this.hasNetworkConnection()) {
+      console.log('--> MyWardDataProvider: Device offline. Saving image on local file system for later upload to Cloud Object Storage');
+      return this.saveImageInOfflineDir(fileName, filePath);
+    } else {</b>
+      return new Promise( (resolve, reject) => {
+        let serverUrl = this.objectStorageAccess.baseUrl + fileName;
+        console.log('--> MyWardDataProvider: Uploading image (' + filePath + ') to server (' + serverUrl + ') ...');
+        let options: FileUploadOptions = {
+          fileKey: 'file',
+          fileName: fileName,
+          httpMethod: 'PUT',
+          headers: {
+            'Authorization': this.objectStorageAccess.authorizationHeader,
+            'Content-Type': 'image/jpeg'
+          }
+        }
+        let fileTransfer: FileTransferObject = this.transfer.create();
+        fileTransfer.upload(filePath, serverUrl, options) .then((data) => {
+          // success
+          console.log('--> MyWardDataProvider: Image upload successful:\n', data);
+          resolve(data);
+        }, (err) => {
+          // error
+          console.log('--> MyWardDataProvider: Image upload failed:\n', JSON.stringify(err));
+          reject(err);
+        })
+      });
+    <b>}</b>
+  }
+
+}
+</code></pre>
+
+Update `IonicMobileApp/src/app/app.module.ts` as below:
+
+<pre><code>
+...
+<b>import { File } from '@ionic-native/file';</b>
+@NgModule({
+  ...
+  providers: [
+    ...
+    <b>File,</b>
+    FileTransfer,
+  ]
+})
+...
 </code></pre>
