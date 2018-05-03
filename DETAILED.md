@@ -666,7 +666,6 @@ export class JsonStoreHandlerProvider {
       setTimeout(() => {
         if (this.network.type != 'none') {
           this.initUpstreamSync();
-          this.syncMyWardData();
           this.myWardDataProvider.uploadOfflineImages();
         }
       }, 3000);
