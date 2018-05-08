@@ -1,3 +1,21 @@
+## Steps
+1. [Use Ionic-MFP-App as a starting point for this project](#step-1-use-ionic-mfp-app-as-a-starting-point-for-this-project)
+2. [Support offline login](#step-2-support-offline-login)
+  - 2.1 [Use JSONStore for offline login](#21-use-jsonstore-for-offline-login)
+  - 2.2 [Update login page to call JSONStore based login when device is offline](#22-update-login-page-to-call-jsonstore-based-login-when-device-is-offline)
+3. [Make Home page and Detail page work in offline mode (downstream sync)](#step-3-make-home-page-and-detail-page-work-in-offline-mode-downstream-sync)
+  - 3.1 [Deploy MFP adapter that synchronizes data between Cloudant and JSONStore](#31-deploy-mfp-adapter-that-synchronizes-data-between-cloudant-and-jsonstore)
+  - 3.2 [Use JSONStore for offline storage and syncing of data from Cloudant](#32-use-jsonstore-for-offline-storage-and-syncing-of-data-from-cloudant)
+  - 3.3 [Update Home page to load data from JSONStore](#33-update-home-page-to-load-data-from-jsonstore)
+  - 3.4 [Update views to take care of data wrapping by JSONStore](#34-update-views-to-take-care-of-data-wrapping-by-jsonstore)
+  - 3.5 [Delete redundant code](#35-delete-redundant-code)
+4. [Support reporting of new problems in offline mode (upstream sync)](#step-4-support-reporting-of-new-problems-in-offline-mode-upstream-sync)
+  - 4.1 [Add code for upstream sync of data to Cloudant](#41-add-code-for-upstream-sync-of-data-to-cloudant)
+  - 4.2 [Add code for upstream sync of images to Cloud Object Storage](#42-add-code-for-upstream-sync-of-images-to-cloud-object-storage)
+  - 4.3 [Update Report New Problem page to work in offline mode as well](#43-update-report-new-problem-page-to-work-in-offline-mode-as-well)
+  - 4.4 [Update Home page to show grievances reported in offline mode as well](#44-update-home-page-to-show-grievances-reported-in-offline-mode-as-well)
+  - 4.5 [Delete redundant code](#45-delete-redundant-code)
+
 
 ## Step 1. Use Ionic-MFP-App as a starting point for this project
 
