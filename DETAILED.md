@@ -43,8 +43,8 @@ $ ionic cordova plugin add cordova-plugin-mfp-jsonstore
 Add a new provider for working with JSONStore as below:
 
 ```
-$ ionic generate provider JSONStoreHandler
-[OK] Generated a provider named JSONStoreHandler!
+$ ionic generate provider JsonStoreHandler
+[OK] Generated a provider named JsonStoreHandler!
 ```
 
 Update `IonicMobileApp/src/providers/json-store-handler/json-store-handler.ts` as below:
@@ -314,7 +314,8 @@ Update `IonicMobileApp/src/providers/json-store-handler/json-store-handler.ts` a
 export class JsonStoreHandlerProvider {
   isCollectionInitialized = {};
   <b>onSyncSuccessCallback = null;
-  onSyncFailureCallback = null;</b>
+  onSyncFailureCallback = null;
+  objectStorageAccess = null;</b>
 
   userCredentialsCollectionName = 'userCredentials';
   userCredentialsCollections = {
@@ -450,17 +451,22 @@ export class JsonStoreHandlerProvider {
 
   syncMyWardData() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
-    collectionInstance.sync({}).then(() => {
-      console.log('--> JsonStoreHandler downstream sync initiated');
-    }, (failure) => {
-      console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + failure);
-    });
+    if (collectionInstance != null) {
+      collectionInstance.sync({}).then(() => {
+        console.log('--> JsonStoreHandler downstream sync initiated');
+      }, (failure) => {
+        console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + failure);
+      });
+    } else {
+      console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + 'Collection ' + this.myWardCollectionName + ' not yet initialized');
+    }
   }
   
   loadObjectStorageAccess() {
     this.myWardDataProvider.getObjectStorageAccess().then(objectStorageAccess => {
       this.hasObjectStorageAccessChanged(objectStorageAccess).then((hasChanged) => {
         if (hasChanged) {
+          this.objectStorageAccess = objectStorageAccess;
           let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
           collectionInstance.clear({}).then(() => {
             collectionInstance.add(objectStorageAccess, {}).then((noOfDocs) => {
@@ -496,17 +502,26 @@ export class JsonStoreHandlerProvider {
 
   getObjectStorageAccess() {
     return new Promise( (resolve, reject) => {
+      if (this.objectStorageAccess) {
+        // already loaded data
+        return resolve(this.objectStorageAccess);
+      }
       let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
-      collectionInstance.findAll({}).then((results) => {
-        if (results.length > 0) {
-          resolve(results[0].json);
-        } else {
-          resolve(null);
-        }
-      }, (failure) => {
-        console.log('--> JsonStoreHandler: getObjectStorageAccess failed\n', failure);
-        reject(failure);
-      });
+      if (collectionInstance != null) {
+        collectionInstance.findAll({}).then((results) => {
+          if (results.length > 0) {
+            this.objectStorageAccess = results[0].json;
+            resolve(results[0].json);
+          } else {
+            resolve(null);
+          }
+        }, (failure) => {
+          console.log('--> JsonStoreHandler: getObjectStorageAccess failed\n', failure);
+          reject(failure);
+        });
+      } else {
+        resolve(null);
+      }
     });
   }</b>
 }
@@ -540,8 +555,11 @@ export class HomePage {
     console.log('--> HomePage ionViewWillEnter() called');
     this.initAuthChallengeHandler();
     <b>this.jsonStoreHandler.setOnSyncSuccessCallback(() => {
-      console.log('--> HomePage onSyncSuccessCallback() called');
-      this.loadData();
+      let view = this.navCtrl.getActive();
+      if (view.instance instanceof HomePage) {
+        console.log('--> HomePage onSyncSuccessCallback() called');
+        this.loadData();
+      }
     });</b>
   }
 
@@ -645,6 +663,9 @@ Update `IonicMobileApp/src/pages/problem-detail/problem-detail.ts` as below:
   }
 </code></pre>
 
+### 3.4 Delete redundant code
+
+From `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` delete the function `load()` which is now redundant.
 
 ## Step 4. Support reporting of new problems in offline mode (upstream sync)
 
