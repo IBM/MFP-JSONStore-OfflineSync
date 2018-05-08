@@ -132,12 +132,21 @@ export class ReportNewPage {
   }
 
   showAlert(alertTitle, alertMessage, enableBackdropDismiss: boolean = true, okHandler?) {
+    // Disable the map - https://stackoverflow.com/questions/45500031/ionic-3-unable-to-click-on-alert-dialog-shown-above-google-maps
+    this.map.setClickable(false);
+
     let prompt = this.alertCtrl.create({
       title: alertTitle,
       message: alertMessage,
       buttons: [{
         text: 'Ok',
-        handler: okHandler
+        handler: () => {
+          // Enable the map again - https://stackoverflow.com/questions/45500031/ionic-3-unable-to-click-on-alert-dialog-shown-above-google-maps
+          this.map.setClickable(true);
+          if (okHandler) {
+            okHandler();
+          }
+        }
       }],
       enableBackdropDismiss: enableBackdropDismiss
     });
