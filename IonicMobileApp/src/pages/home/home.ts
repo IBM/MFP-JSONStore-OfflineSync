@@ -17,9 +17,10 @@ import { Component } from '@angular/core';
 import { NavController, LoadingController } from 'ionic-angular';
 import { ImgCacheService } from 'ng-imgcache';
 
-import { MyWardDataProvider } from '../../providers/my-ward-data/my-ward-data';
 import { AuthHandlerProvider } from '../../providers/auth-handler/auth-handler';
 import { JsonStoreHandlerProvider } from '../../providers/json-store-handler/json-store-handler';
+import { UpstreamImageSyncProvider } from '../../providers/upstream-image-sync/upstream-image-sync';
+
 import { ProblemDetailPage } from '../problem-detail/problem-detail';
 import { ReportNewPage } from '../report-new/report-new';
 import { LoginPage } from '../login/login';
@@ -32,10 +33,12 @@ export class HomePage {
   loader: any;
   grievances: any;
   objectStorageAccess: any;
+  offlineGrievances: any;
+  offlineDirPath: string;
 
   constructor(public navCtrl: NavController, public loadingCtrl: LoadingController,
-    public myWardDataProvider: MyWardDataProvider, public imgCache: ImgCacheService,
-    private authHandler:AuthHandlerProvider, private jsonStoreHandler:JsonStoreHandlerProvider) {
+    public imgCache: ImgCacheService, private authHandler:AuthHandlerProvider,
+    private jsonStoreHandler:JsonStoreHandlerProvider, private upstreamImageSync: UpstreamImageSyncProvider) {
     console.log('--> HomePage constructor() called');
   }
 
@@ -49,9 +52,13 @@ export class HomePage {
     console.log('--> HomePage ionViewWillEnter() called');
     this.initAuthChallengeHandler();
     this.jsonStoreHandler.setOnSyncSuccessCallback(() => {
-      console.log('--> HomePage onSyncSuccessCallback() called');
-      this.loadData();
+      let view = this.navCtrl.getActive();
+      if (view.instance instanceof HomePage) {
+        console.log('--> HomePage onSyncSuccessCallback() called');
+        this.loadData();
+      }
     });
+    this.loadOfflineDataFromJsonStore();
   }
 
   loadData() {
@@ -61,10 +68,12 @@ export class HomePage {
         content: 'Loading data. Please wait ...'
       });
       this.loader.present().then(() => {
+        this.loadOfflineDataFromJsonStore();
         this.loadDataFromJsonStore();
       });
     } else {
       console.log('--> HomePage reusing previous loader');
+      this.loadOfflineDataFromJsonStore();
       this.loadDataFromJsonStore();
     }
   }
@@ -83,7 +92,7 @@ export class HomePage {
             this.grievances = data;
             this.loader.dismiss();
             this.loader = null;
-            this.myWardDataProvider.uploadOfflineImages();
+            this.upstreamImageSync.uploadOfflineImages();
           });
         });
       } else {
@@ -92,9 +101,20 @@ export class HomePage {
     });
   }
 
+  loadOfflineDataFromJsonStore() {
+    this.jsonStoreHandler.getUnSyncedData().then(data => {
+      this.offlineGrievances = data;
+      this.offlineDirPath = this.upstreamImageSync.getOfflineDirPath();
+    });
+  }
+
   // https://www.joshmorony.com/a-simple-guide-to-navigation-in-ionic-2/
   itemClick(grievance) {
     this.navCtrl.push(ProblemDetailPage, { grievance: grievance, baseUrl: this.objectStorageAccess.baseUrl });
+  }
+
+  itemClickOfflineData(grievance) {
+    this.navCtrl.push(ProblemDetailPage, { grievance: grievance, baseUrl: this.offlineDirPath });
   }
 
   reportNewProblem(){

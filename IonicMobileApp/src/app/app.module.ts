@@ -34,6 +34,7 @@ import { ReportNewPage } from '../pages/report-new/report-new';
 import { AuthHandlerProvider } from '../providers/auth-handler/auth-handler';
 import { MyWardDataProvider } from '../providers/my-ward-data/my-ward-data';
 import { JsonStoreHandlerProvider } from '../providers/json-store-handler/json-store-handler';
+import { UpstreamImageSyncProvider } from '../providers/upstream-image-sync/upstream-image-sync';
 
 @NgModule({
   declarations: [
@@ -68,7 +69,8 @@ import { JsonStoreHandlerProvider } from '../providers/json-store-handler/json-s
     FileTransfer,
     ImageResizer,
     Network,
-    JsonStoreHandlerProvider
+    JsonStoreHandlerProvider,
+    UpstreamImageSyncProvider
   ]
 })
 export class AppModule {}

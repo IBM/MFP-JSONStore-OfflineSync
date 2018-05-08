@@ -16,14 +16,16 @@
 /// <reference path="../../../plugins/cordova-plugin-mfp-jsonstore/typings/jsonstore.d.ts" />
 
 import { Injectable } from '@angular/core';
-import { MyWardDataProvider } from '../my-ward-data/my-ward-data';
 import { Network } from '@ionic-native/network';
+
+import { MyWardDataProvider } from '../my-ward-data/my-ward-data';
 
 @Injectable()
 export class JsonStoreHandlerProvider {
   isCollectionInitialized = {};
   onSyncSuccessCallback = null;
   onSyncFailureCallback = null;
+  objectStorageAccess = null;
 
   constructor(private network: Network, public myWardDataProvider: MyWardDataProvider) {
     console.log('--> JsonStoreHandler constructor() called');
@@ -35,8 +37,6 @@ export class JsonStoreHandlerProvider {
       setTimeout(() => {
         if (this.network.type != 'none') {
           this.initUpstreamSync();
-          this.syncMyWardData();
-          this.myWardDataProvider.uploadOfflineImages();
         }
       }, 3000);
     });
@@ -146,7 +146,7 @@ export class JsonStoreHandlerProvider {
         if (isOnline) {
           console.log('--> JsonStoreHandler: password change detected for user: ' + username + ' . Destroying old JSONStore so as to recreate it.\n', JSON.stringify(failure));
           WL.JSONStore.destroy(encodedUsername).then(() => {
-            return this.initCollections(username, password, isOnline);
+            return resolve(this.initCollections(username, password, isOnline));
           });
         } else {
           console.log('--> JsonStoreHandler: failed to initialize \'' + this.userCredentialsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
@@ -204,6 +204,22 @@ export class JsonStoreHandlerProvider {
     });
   }
 
+  getUnSyncedData() {
+    return new Promise( (resolve, reject) => {
+      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
+      if (collectionInstance != null) {
+        collectionInstance.getAllDirty('{}').then((data) => {
+          if (data.length > 0) {
+            console.log('--> JsonStoreHandler: Data that is not yet synced with Cloudant = \n', data);
+          }
+          resolve(data);
+        });
+      } else {
+        resolve({});
+      }
+    });
+  }
+
   onSyncSuccess(msg) {
     console.log('--> JsonStoreHandler onSyncSuccess: ' + msg);
     // TODO onSyncSuccessCallback should be called only if data has changed
@@ -241,26 +257,35 @@ export class JsonStoreHandlerProvider {
 
   syncMyWardData() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
-    collectionInstance.sync({}).then(() => {
-      console.log('--> JsonStoreHandler downstream sync initiated');
-    }, (failure) => {
-      console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + failure);
-    });
+    if (collectionInstance != null) {
+      collectionInstance.sync({}).then(() => {
+        console.log('--> JsonStoreHandler downstream sync initiated');
+      }, (failure) => {
+        console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + failure);
+      });
+    } else {
+      console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + 'Collection ' + this.myWardCollectionName + ' not yet initialized');
+    }
   }
 
   initUpstreamSync() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
-    collectionInstance.sync({}).then(() => {
-      console.log('--> JsonStoreHandler upstream sync initiated');
-    }, (failure) => {
-      console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + failure);
-    });
+    if (collectionInstance != null) {
+      collectionInstance.sync({}).then(() => {
+        console.log('--> JsonStoreHandler upstream sync initiated');
+      }, (failure) => {
+        console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + failure);
+      });
+    } else {
+      console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + 'Collection ' + this.newProblemsCollectionName + ' not yet initialized');
+    }
   }
 
   loadObjectStorageAccess() {
     this.myWardDataProvider.getObjectStorageAccess().then(objectStorageAccess => {
       this.hasObjectStorageAccessChanged(objectStorageAccess).then((hasChanged) => {
         if (hasChanged) {
+          this.objectStorageAccess = objectStorageAccess;
           let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
           collectionInstance.clear({}).then(() => {
             collectionInstance.add(objectStorageAccess, {}).then((noOfDocs) => {
@@ -296,17 +321,26 @@ export class JsonStoreHandlerProvider {
 
   getObjectStorageAccess() {
     return new Promise( (resolve, reject) => {
+      if (this.objectStorageAccess) {
+        // already loaded data
+        return resolve(this.objectStorageAccess);
+      }
       let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.objectStorageDetailsCollectionName);
-      collectionInstance.findAll({}).then((results) => {
-        if (results.length > 0) {
-          resolve(results[0].json);
-        } else {
-          resolve(null);
-        }
-      }, (failure) => {
-        console.log('--> JsonStoreHandler: getObjectStorageAccess failed\n', failure);
-        reject(failure);
-      });
+      if (collectionInstance != null) {
+        collectionInstance.findAll({}).then((results) => {
+          if (results.length > 0) {
+            this.objectStorageAccess = results[0].json;
+            resolve(results[0].json);
+          } else {
+            resolve(null);
+          }
+        }, (failure) => {
+          console.log('--> JsonStoreHandler: getObjectStorageAccess failed\n', failure);
+          reject(failure);
+        });
+      } else {
+        resolve(null);
+      }
     });
   }
 

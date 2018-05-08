@@ -41,4 +41,13 @@ limitations under the License.
       <p>@ {{grievance.json.address}}</p>
     </button>
   </ion-list>
+  <ion-list>
+    <button ion-item (click)="itemClickOfflineData(grievance)" *ngFor="let grievance of offlineGrievances">
+      <ion-thumbnail item-left>
+        <img src="{{offlineDirPath}}/{{grievance.json.picture.thumbnail}}">
+      </ion-thumbnail>
+      <h2 text-wrap>{{grievance.json.problemDescription}}</h2>
+      <p>@ {{grievance.json.address}}</p>
+    </button>
+  </ion-list>
 </ion-content>
