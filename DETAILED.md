@@ -528,6 +528,31 @@ export class JsonStoreHandlerProvider {
 
 </code></pre>
 
+
+Update `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` as below:
+
+<pre><code>
+...
+export class MyWardDataProvider {
+  ...
+  <b>getObjectStorageAccess() {
+    // console.log('--> MyWardDataProvider getting Object Storage AuthToken from adapter ...');
+    return new Promise((resolve, reject) => {
+      let dataRequest = new WLResourceRequest("/adapters/MyWardData/objectStorage", WLResourceRequest.GET);
+      dataRequest.send().then((response) => {
+        // console.log('--> MyWardDataProvider got Object Storage AuthToken from adapter ', response);
+        resolve(response.responseJSON);
+      }, (failure) => {
+        console.log('--> MyWardDataProvider failed to get Object Storage AuthToken from adapter\n', JSON.stringify(failure));
+        reject(failure);
+      })
+    });
+  }</b>
+  ...
+}
+</code></pre>
+
+
 ### 3.3 Update Home page to load data from JSONStore
 
 Update `IonicMobileApp/src/pages/home/home.ts` as below:
@@ -663,7 +688,7 @@ Update `IonicMobileApp/src/pages/problem-detail/problem-detail.ts` as below:
   }
 </code></pre>
 
-### 3.4 Delete redundant code
+### 3.5 Delete redundant code
 
 From `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` delete the function `load()` which is now redundant.
 
@@ -687,7 +712,6 @@ export class JsonStoreHandlerProvider {
       setTimeout(() => {
         if (this.network.type != 'none') {
           this.initUpstreamSync();
-          this.myWardDataProvider.uploadOfflineImages();
         }
       }, 3000);
     });</b>
@@ -748,11 +772,15 @@ export class JsonStoreHandlerProvider {
 
   <b>initUpstreamSync() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
-    collectionInstance.sync({}).then(() => {
-      console.log('--> JsonStoreHandler upstream sync initiated');
-    }, (failure) => {
-      console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + failure);
-    });
+    if (collectionInstance != null) {
+      collectionInstance.sync({}).then(() => {
+        console.log('--> JsonStoreHandler upstream sync initiated');
+      }, (failure) => {
+        console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + failure);
+      });
+    } else {
+      console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + 'Collection ' + this.newProblemsCollectionName + ' not yet initialized');
+    }
   }
 
   onUpstreamSyncSuccess(data) {
@@ -775,23 +803,231 @@ export class JsonStoreHandlerProvider {
         reject(failure);
       });
     });
+  }
+
+  getUnSyncedData() {
+    return new Promise( (resolve, reject) => {
+      let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
+      if (collectionInstance != null) {
+        collectionInstance.getAllDirty('{}').then((data) => {
+          if (data.length > 0) {
+            console.log('--> JsonStoreHandler: Data that is not yet synced with Cloudant = \n', data);
+          }
+          resolve(data);
+        });
+      } else {
+        resolve({});
+      }
+    });
   }</b>
 }
+</code></pre>
+
+Create an Ionic Provider for handling upstream sync of images to Cloud Object Storage as below:
+
+```
+$ ionic generate provider UpstreamImageSync
+[OK] Generated a provider named UpstreamImageSync!
+```
+
+Install Ionic native plugin for `File` as below:
+
+```
+$ npm install --save @ionic-native/file
+```
+
+Update `IonicMobileApp/src/app/app.module.ts` as below:
+
+<pre><code>
+...
+<b>import { File } from '@ionic-native/file';</b>
+@NgModule({
+  ...
+  providers: [
+    ...
+    <b>File,</b>
+    FileTransfer,
+  ]
+})
+...
+</code></pre>
+
+Update `IonicMobileApp/src/providers/upstream-image-sync/upstream-image-sync.ts` as below:
+
+<pre><code>
+
+import { Injectable } from '@angular/core';
+<b>import { FileTransfer, FileUploadOptions, FileTransferObject } from '@ionic-native/file-transfer';
+import { File } from '@ionic-native/file';
+import { Network } from '@ionic-native/network';
+
+import { JsonStoreHandlerProvider } from '../json-store-handler/json-store-handler';</b>
+
+@Injectable()
+export class UpstreamImageSyncProvider {
+  <b>offlineImagesDir : string = 'offlineImagesDir';
+  offlineImagesDirEntry = null;
+
+  constructor(private transfer: FileTransfer, private file: File, private network: Network,
+      private jsonStoreHandler: JsonStoreHandlerProvider) {
+    console.log('--> UpstreamImageSyncProvider constructor() called');
+    this.createOfflineImagesDirIfNotExists();
+    this.network.onConnect().subscribe(() => {
+      console.log('--> UpstreamImageSyncProvider: Network connected!');
+      // We just got a connection but we need to wait briefly
+      // before we determine the connection type. Might need to wait.
+      // prior to doing any api requests as well.
+      setTimeout(() => {
+        if (this.network.type != 'none') {
+          this.uploadOfflineImages();
+        }
+      }, 3000);
+    });
+  }
+
+  createOfflineImagesDirIfNotExists() {
+    this.file.checkDir(this.file.dataDirectory, this.offlineImagesDir).then(_ => {
+      console.log('--> UpstreamImageSyncProvider: Directory ' + this.offlineImagesDir + ' exists');
+      this.file.resolveDirectoryUrl(this.file.dataDirectory).then((baseDirEntry) => {
+        this.file.getDirectory(baseDirEntry, this.offlineImagesDir, {}).then((dirEntry) => {
+          this.offlineImagesDirEntry = dirEntry;
+          console.log('--> UpstreamImageSyncProvider: Successfully resolved directory ' + this.offlineImagesDir);
+        }).catch((err) => {
+          console.log('--> UpstreamImageSyncProvider: Error getting directory ' + this.offlineImagesDir + ':\n' + JSON.stringify(err));
+        });
+      }).catch((err) => {
+        console.log('--> UpstreamImageSyncProvider: Error resolving directory URL ' + this.file.dataDirectory + ':\n' + JSON.stringify(err));
+      });
+    }).catch(err => {
+      console.log('--> UpstreamImageSyncProvider: Creating directory ' + this.offlineImagesDir + ' ...');
+      this.file.createDir(this.file.dataDirectory, this.offlineImagesDir, false).then((dirEntry) => {
+        this.offlineImagesDirEntry = dirEntry;
+        console.log('--> UpstreamImageSyncProvider: Successfully created directory ' + this.offlineImagesDir);
+      }).catch(err => {
+        console.log('--> UpstreamImageSyncProvider: Error creating directory ' + this.offlineImagesDir + ':\n' + JSON.stringify(err));
+      });
+    });
+  }
+
+  getOfflineDirPath() {
+    if (this.offlineImagesDirEntry != null) {
+      return this.offlineImagesDirEntry.nativeURL;
+    } else {
+      return null;
+    }
+  }
+
+  saveImageInOfflineDir(fileName, filePath) {
+    return new Promise( (resolve, reject) => {
+      (window as any).resolveLocalFileSystemURL(filePath, (entry) => {
+        console.log('--> UpstreamImageSyncProvider: Copying ' + entry.nativeURL + ' to ' + this.file.dataDirectory + this.offlineImagesDir + '/' + fileName + ' ...');
+        entry.copyTo(this.offlineImagesDirEntry, fileName, (newEntry) => {
+          console.log('--> UpstreamImageSyncProvider: Successfully copied file to path {{' + newEntry.filesystem.name + '}}/' + newEntry.fullPath);
+          resolve("");
+        }, (err) => {
+          console.log('--> UpstreamImageSyncProvider: copyTo failed: ' + JSON.stringify(err));
+          reject(err);
+        });
+      }, (err) => {
+        console.log('--> UpstreamImageSyncProvider: Error during resolveLocalFileSystemURL: ' + JSON.stringify(err));
+        reject(err);
+      });
+    });
+  }
+
+  hasNetworkConnection() {
+    // https://ionicframework.com/docs/native/network/
+    return this.network.type !== 'none';
+  }
+
+  uploadImage(fileName, filePath) {
+    return new Promise( (resolve, reject) => {
+      if (!this.hasNetworkConnection()) {
+        console.log('--> UpstreamImageSyncProvider: Device offline. Saving image on local file system for later upload to Cloud Object Storage');
+        resolve(this.saveImageInOfflineDir(fileName, filePath));
+      } else {
+        this.jsonStoreHandler.getObjectStorageAccess().then(objectStorageAccess => {
+          if (objectStorageAccess != null) {
+            resolve(this.uploadImageToServer(fileName, filePath, objectStorageAccess));
+          } else {
+            reject('ObjectStorageAccess not yet initialized');
+          }
+        });
+      }
+    });
+  }
+
+  uploadImageToServer(fileName, filePath, objectStorageAccess) {
+    return new Promise( (resolve, reject) => {
+      let serverUrl = objectStorageAccess.baseUrl + fileName;
+      console.log('--> UpstreamImageSyncProvider: Uploading image (' + filePath + ') to server (' + serverUrl + ') ...');
+      let options: FileUploadOptions = {
+        fileKey: 'file',
+        fileName: fileName,
+        httpMethod: 'PUT',
+        headers: {
+          'Authorization': objectStorageAccess.authorizationHeader,
+          'Content-Type': 'image/jpeg'
+        }
+      }
+      let fileTransfer: FileTransferObject = this.transfer.create();
+      fileTransfer.upload(filePath, serverUrl, options) .then((data) => {
+        // success
+        console.log('--> UpstreamImageSyncProvider: Image upload successful:\n', data);
+        resolve(data);
+      }, (err) => {
+        // error
+        console.log('--> UpstreamImageSyncProvider: Image upload failed:\n', JSON.stringify(err));
+        reject(err);
+      })
+    });
+  }
+
+  uploadOfflineImages() {
+    if (!this.hasNetworkConnection()) {
+      return;
+    }
+    this.jsonStoreHandler.getObjectStorageAccess().then(objectStorageAccess => {
+      if (objectStorageAccess != null) {
+        console.log('--> UpstreamImageSyncProvider: Listing images to be uploaded in  ' + this.offlineImagesDir+ ' ...');
+        this.file.listDir(this.file.dataDirectory, this.offlineImagesDir).then((entries) => {
+          entries.forEach((entry) => {
+            console.log('--> UpstreamImageSyncProvider: Uploading image ' + entry.name + ' ...');
+            this.uploadImageToServer(entry.name, entry.nativeURL, objectStorageAccess).then(() => {
+              console.log('--> UpstreamImageSyncProvider: Removing cached file ' + entry.nativeURL + ' ...');
+              entry.remove(() => {
+                console.log('--> UpstreamImageSyncProvider: Successfully removed cached file ' + entry.nativeURL);
+              }, (err) => {
+                console.log('--> UpstreamImageSyncProvider: Error removing cached file:\n' + JSON.stringify(err));
+              });
+            }).catch((err) => {
+              console.log('--> UpstreamImageSyncProvider: Error uploading image to server:\n' + JSON.stringify(err));
+            });
+          });
+        }).catch((err) => {
+          console.log('--> UpstreamImageSyncProvider: Error listing files in uploadOfflineImages: ' + JSON.stringify(err));
+        });
+      }
+    });
+  }</b>
+}
+
 </code></pre>
 
 Update `IonicMobileApp/src/pages/report-new/report-new.ts` as below:
 
 <pre><code>
 ...
-<b>import { JsonStoreHandlerProvider } from '../../providers/json-store-handler/json-store-handler';</b>
+<b>// <del>import { MyWardDataProvider } from '../../providers/my-ward-data/my-ward-data';</del>
+import { JsonStoreHandlerProvider } from '../../providers/json-store-handler/json-store-handler';
+import { UpstreamImageSyncProvider } from '../../providers/upstream-image-sync/upstream-image-sync';</b>
 ...
 export class ReportNewPage {
   ...
   constructor(public navCtrl: NavController, public navParams: NavParams,
     private camera : Camera, private alertCtrl: AlertController, private imageResizer: ImageResizer,
-    private loadingCtrl: LoadingController, private toastCtrl: ToastController,
-    private myWardDataProvider: MyWardDataProvider, private authHandler:AuthHandlerProvider<b>,
-    private jsonStoreHandler:JsonStoreHandlerProvider</b>) {
+    private loadingCtrl: LoadingController, private toastCtrl: ToastController, <b>private authHandler:AuthHandlerProvider,
+    private jsonStoreHandler:JsonStoreHandlerProvider, private upstreamImageSync: UpstreamImageSyncProvider</b>) {
     console.log('--> ReportNewPage constructor() called');
   }
   ...
@@ -799,8 +1035,8 @@ export class ReportNewPage {
   submit() {
     ...
     this.loader.present().then(() => {
-      // <del>this.myWardDataProvider.uploadNewGrievance(grievance).then(</del>
-      <b>this.jsonStoreHandler.addNewGrievance(grievance)</b>.then(
+      <b>// <del>this.myWardDataProvider.uploadNewGrievance(grievance).then(</del>
+      this.jsonStoreHandler.addNewGrievance(grievance).then(</b>
         (response) => {
           this.loader.dismiss();
           this.showToast('Data Uploaded Successfully');
@@ -809,16 +1045,18 @@ export class ReportNewPage {
             dismissOnPageChange: true
           });
           this.loader.present().then(() => {
-            this.myWardDataProvider.uploadImage(imageFilename, this.capturedImage).then(
+            <b>// <del>this.myWardDataProvider.uploadImage(imageFilename, this.capturedImage).then(</del>
+            this.upstreamImageSync.uploadImage(imageFilename, this.capturedImage).then(</b>
               (response) => {
                 this.imageResizer.resize(this.getImageResizerOptions()).then(
                   (filePath: string) => {
-                    this.myWardDataProvider.uploadImage(thumbnailImageFilename, filePath).then(
+                    <b>// <del>this.myWardDataProvider.uploadImage(thumbnailImageFilename, filePath).then(</del>
+                    this.upstreamImageSync.uploadImage(imageFilename, this.capturedImage).then(</b>
                       (response) => {
                         this.loader.dismiss();
                         this.showToast('Image Uploaded Successfully');
                         this.showAlert('Upload Successful', 'Successfully uploaded problem report to server', false, () => {
-                          <b>// this.myWardDataProvider.data.push(grievance);</b>
+                          <b>// <del>this.myWardDataProvider.data.push(grievance);</del></b>
                           this.navCtrl.pop();
                         })
                       }, (failure) => {
@@ -840,148 +1078,110 @@ export class ReportNewPage {
 }
 </code></pre>
 
-Update `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` as below:
+Delete redundant code from `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` as below:
 
 <pre><code>
-<b>import { File } from '@ionic-native/file';
-import { Network } from '@ionic-native/network';</b>
-...
+/// <reference path="../../../plugins/cordova-plugin-mfp/typings/worklight.d.ts" />
+
+import { Injectable } from '@angular/core';
+
+@Injectable()
 export class MyWardDataProvider {
-  ...
-  constructor(private transfer: FileTransfer<b>, private file: File, private network: Network</b>) {
+
+  constructor() {
     console.log('--> MyWardDataProvider constructor() called');
-    <b>this.createOfflineImagesDirIfNotExists();</b>
-  }
-  ...
-
-  <b>hasNetworkConnection() {
-    // https://ionicframework.com/docs/native/network/
-    return this.network.type !== 'none';
   }
 
-  offlineImagesDir : string = 'offlineImagesDir';
-  offlineImagesDirEntry = null;
-
-  createOfflineImagesDirIfNotExists() {
-    this.file.checkDir(this.file.dataDirectory, this.offlineImagesDir).then(_ => {
-      console.log('--> MyWardDataProvider: Directory ' + this.offlineImagesDir + ' exists');
-      this.file.resolveDirectoryUrl(this.file.dataDirectory).then((baseDirEntry) => {
-        this.file.getDirectory(baseDirEntry, this.offlineImagesDir, {}).then((dirEntry) => {
-          this.offlineImagesDirEntry = dirEntry;
-          console.log('--> MyWardDataProvider: Successfully resolved directory ' + this.offlineImagesDir);
-        }).catch((err) => {
-          console.log('--> MyWardDataProvider: Error getting directory ' + this.offlineImagesDir + ':\n' + JSON.stringify(err));
-        });
-      }).catch((err) => {
-        console.log('--> MyWardDataProvider: Error resolving directory URL ' + this.file.dataDirectory + ':\n' + JSON.stringify(err));
-      });
-    }).catch(err => {
-      console.log('--> MyWardDataProvider: Creating directory ' + this.offlineImagesDir + ' ...');
-      this.file.createDir(this.file.dataDirectory, this.offlineImagesDir, false).then((dirEntry) => {
-        this.offlineImagesDirEntry = dirEntry;
-        console.log('--> MyWardDataProvider: Successfully created directory ' + this.offlineImagesDir);
-      }).catch(err => {
-        console.log('--> MyWardDataProvider: Error creating directory ' + this.offlineImagesDir + ':\n' + JSON.stringify(err));
-      });
+  getObjectStorageAccess() {
+    // console.log('--> MyWardDataProvider getting Object Storage AuthToken from adapter ...');
+    return new Promise((resolve, reject) => {
+      let dataRequest = new WLResourceRequest("/adapters/MyWardData/objectStorage", WLResourceRequest.GET);
+      dataRequest.send().then((response) => {
+        // console.log('--> MyWardDataProvider got Object Storage AuthToken from adapter ', response);
+        resolve(response.responseJSON);
+      }, (failure) => {
+        console.log('--> MyWardDataProvider failed to get Object Storage AuthToken from adapter\n', JSON.stringify(failure));
+        reject(failure);
+      })
     });
   }
-
-  saveImageInOfflineDir(fileName, filePath) {
-    return new Promise( (resolve, reject) => {
-      (window as any).resolveLocalFileSystemURL(filePath, (entry) => {
-        console.log('--> MyWardDataProvider: Copying ' + entry.nativeURL + ' to ' + this.file.dataDirectory + this.offlineImagesDir + '/' + fileName + ' ...');
-        entry.copyTo(this.offlineImagesDirEntry, fileName, (newEntry) => {
-          console.log('--> MyWardDataProvider: Successfully copied file to path {{' + newEntry.filesystem.name + '}}/' + newEntry.fullPath);
-          resolve("");
-        }, (err) => {
-          console.log('--> MyWardDataProvider: copyTo failed: ' + JSON.stringify(err));
-          reject(err);
-        });
-      }, (err) => {
-        console.log('--> MyWardDataProvider: Error during resolveLocalFileSystemURL: ' + JSON.stringify(err));
-        reject(err);
-      });
-    });
-  }
-
-  uploadOfflineImages() {
-    if (!this.hasNetworkConnection()) {
-      return;
-    }
-    console.log('--> MyWardDataProvider: Listing images to be uploaded in  ' + this.offlineImagesDir+ ' ...');
-    this.file.listDir(this.file.dataDirectory, this.offlineImagesDir).then((entries) => {
-      entries.forEach((entry) => {
-        console.log('--> MyWardDataProvider: Uploading image ' + entry.name + ' ...');
-        this.uploadImage(entry.name, entry.nativeURL).then(() => {
-          console.log('--> MyWardDataProvider: Removing cached file ' + entry.nativeURL + ' ...');
-          entry.remove(() => {
-            console.log('--> MyWardDataProvider: Successfully removed cached file ' + entry.nativeURL);
-          }, (err) => {
-            console.log('--> MyWardDataProvider: Error removing cached file:\n' + JSON.stringify(err));
-          });
-        });
-      });
-    }).catch((err) => {
-      console.log('--> MyWardDataProvider: Error listing files in uploadOfflineImages: ' + JSON.stringify(err));
-    });
-  }</b>
-
-  uploadImage(fileName, filePath) {
-    <b>if (!this.hasNetworkConnection()) {
-      console.log('--> MyWardDataProvider: Device offline. Saving image on local file system for later upload to Cloud Object Storage');
-      return this.saveImageInOfflineDir(fileName, filePath);
-    } else {</b>
-      return new Promise( (resolve, reject) => {
-        let serverUrl = this.objectStorageAccess.baseUrl + fileName;
-        console.log('--> MyWardDataProvider: Uploading image (' + filePath + ') to server (' + serverUrl + ') ...');
-        let options: FileUploadOptions = {
-          fileKey: 'file',
-          fileName: fileName,
-          httpMethod: 'PUT',
-          headers: {
-            'Authorization': this.objectStorageAccess.authorizationHeader,
-            'Content-Type': 'image/jpeg'
-          }
-        }
-        let fileTransfer: FileTransferObject = this.transfer.create();
-        fileTransfer.upload(filePath, serverUrl, options) .then((data) => {
-          // success
-          console.log('--> MyWardDataProvider: Image upload successful:\n', data);
-          resolve(data);
-        }, (err) => {
-          // error
-          console.log('--> MyWardDataProvider: Image upload failed:\n', JSON.stringify(err));
-          reject(err);
-        })
-      });
-    <b>}</b>
-  }
-
 }
 </code></pre>
 
-Update `IonicMobileApp/src/app/app.module.ts` as below:
+Update `IonicMobileApp/src/pages/home/home.html` as below:
 
 <pre><code>
 ...
-<b>import { File } from '@ionic-native/file';</b>
-@NgModule({
-  ...
-  providers: [
-    ...
-    <b>File,</b>
-    FileTransfer,
-  ]
-})
-...
+&lt;ion-content padding&gt;
+  &lt;ion-list&gt;
+    &lt;button ion-item (click)="itemClick(grievance)" *ngFor="let grievance of grievances"&gt;
+      &lt;ion-thumbnail item-left&gt;
+        &lt;img img-cache img-cache-src="{{objectStorageAccess.baseUrl}}{{grievance.json.picture.thumbnail}}"&gt;
+      &lt;/ion-thumbnail&gt;
+      &lt;h2 text-wrap&gt;{{grievance.json.problemDescription}}&lt;/h2&gt;
+      &lt;p&gt;@ {{grievance.json.address}}&lt;/p&gt;
+    &lt;/button&gt;
+  &lt;/ion-list&gt;
+  <b>&lt;ion-list&gt;
+    &lt;button ion-item (click)="itemClickOfflineData(grievance)" *ngFor="let grievance of offlineGrievances"&gt;
+      &lt;ion-thumbnail item-left&gt;
+        &lt;img src="{{offlineDirPath}}/{{grievance.json.picture.thumbnail}}"&gt;
+      &lt;/ion-thumbnail&gt;
+      &lt;h2 text-wrap&gt;{{grievance.json.problemDescription}}&lt;/h2&gt;
+      &lt;p&gt;@ {{grievance.json.address}}&lt;/p&gt;
+    &lt;/button&gt;
+  &lt;/ion-list&gt;</b>
+&lt;/ion-content&gt;
 </code></pre>
 
 Update `IonicMobileApp/src/pages/home/home.ts` as below:
 
 <pre><code>
 ...
+<b>// <del>import { MyWardDataProvider } from '../../providers/my-ward-data/my-ward-data';</del>
+import { UpstreamImageSyncProvider } from '../../providers/upstream-image-sync/upstream-image-sync';</b>
+...
 export class HomePage {
   ...
+  <b>offlineGrievances: any;
+  offlineDirPath: string;</b>
+
+  constructor(public navCtrl: NavController, public loadingCtrl: LoadingController,
+    <b>public imgCache: ImgCacheService, private authHandler:AuthHandlerProvider,
+    private jsonStoreHandler:JsonStoreHandlerProvider, private upstreamImageSync: UpstreamImageSyncProvider</b>) {
+    console.log('--> HomePage constructor() called');
+  }
+  ...
+  ionViewWillEnter() {
+    console.log('--> HomePage ionViewWillEnter() called');
+    this.initAuthChallengeHandler();
+    this.jsonStoreHandler.setOnSyncSuccessCallback(() => {
+      let view = this.navCtrl.getActive();
+      if (view.instance instanceof HomePage) {
+        console.log('--> HomePage onSyncSuccessCallback() called');
+        this.loadData();
+      }
+    });
+    <b>this.loadOfflineDataFromJsonStore();</b>
+  }
+
+  loadData() {
+    if (this.loader == null) {
+      console.log('--> HomePage creating new loader');
+      this.loader = this.loadingCtrl.create({
+        content: 'Loading data. Please wait ...'
+      });
+      this.loader.present().then(() => {
+        <b>this.loadOfflineDataFromJsonStore();</b>
+        this.loadDataFromJsonStore();
+      });
+    } else {
+      console.log('--> HomePage reusing previous loader');
+      <b>this.loadOfflineDataFromJsonStore();</b>
+      this.loadDataFromJsonStore();
+    }
+  }
+
   loadDataFromJsonStore() {
     this.jsonStoreHandler.getObjectStorageAccess().then(objectStorageAccess => {
       if (objectStorageAccess != null) {
@@ -996,7 +1196,7 @@ export class HomePage {
             this.grievances = data;
             this.loader.dismiss();
             this.loader = null;
-            <b>this.myWardDataProvider.uploadOfflineImages();</b>
+            <b>this.upstreamImageSync.uploadOfflineImages();</b>
           });
         });
       } else {
@@ -1004,5 +1204,17 @@ export class HomePage {
       }
     });
   }
+  ...
+  <b>loadOfflineDataFromJsonStore() {
+    this.jsonStoreHandler.getUnSyncedData().then(data => {
+      this.offlineGrievances = data;
+      this.offlineDirPath = this.upstreamImageSync.getOfflineDirPath();
+    });
+  }
+
+  itemClickOfflineData(grievance) {
+    this.navCtrl.push(ProblemDetailPage, { grievance: grievance, baseUrl: this.offlineDirPath });
+  }</b>
+  ...
 }
 </code></pre>
