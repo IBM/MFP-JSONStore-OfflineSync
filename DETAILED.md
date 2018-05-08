@@ -96,7 +96,7 @@ export class JsonStoreHandlerProvider {
         if (isOnline) {
           console.log('--> JsonStoreHandler: password change detected for user: ' + username + ' . Destroying old JSONStore so as to recreate it.\n', JSON.stringify(failure));
           WL.JSONStore.destroy(encodedUsername).then(() => {
-            return this.initCollections(username, password, isOnline);
+            return resolve(this.initCollections(username, password, isOnline));
           });
         } else {
           console.log('--> JsonStoreHandler: failed to initialize \'' + this.userCredentialsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
