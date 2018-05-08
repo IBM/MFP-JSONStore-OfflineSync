@@ -694,6 +694,8 @@ From `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` delete the func
 
 ## Step 4. Support reporting of new problems in offline mode (upstream sync)
 
+### 4.1 Add code for upstream sync of data to Cloudant
+
 Update `IonicMobileApp/src/providers/json-store-handler/json-store-handler.ts` as below:
 
 <pre><code>
@@ -823,12 +825,7 @@ export class JsonStoreHandlerProvider {
 }
 </code></pre>
 
-Create an Ionic Provider for handling upstream sync of images to Cloud Object Storage as below:
-
-```
-$ ionic generate provider UpstreamImageSync
-[OK] Generated a provider named UpstreamImageSync!
-```
+### 4.2 Add code for upstream sync of images to Cloud Object Storage
 
 Install Ionic native plugin for `File` as below:
 
@@ -851,6 +848,13 @@ Update `IonicMobileApp/src/app/app.module.ts` as below:
 })
 ...
 </code></pre>
+
+Create an Ionic Provider for handling upstream sync of images to Cloud Object Storage as below:
+
+```
+$ ionic generate provider UpstreamImageSync
+[OK] Generated a provider named UpstreamImageSync!
+```
 
 Update `IonicMobileApp/src/providers/upstream-image-sync/upstream-image-sync.ts` as below:
 
@@ -1014,6 +1018,8 @@ export class UpstreamImageSyncProvider {
 
 </code></pre>
 
+### 4.3 Update *Report New Problem* page to work in offline mode as well
+
 Update `IonicMobileApp/src/pages/report-new/report-new.ts` as below:
 
 <pre><code>
@@ -1026,7 +1032,7 @@ export class ReportNewPage {
   ...
   constructor(public navCtrl: NavController, public navParams: NavParams,
     private camera : Camera, private alertCtrl: AlertController, private imageResizer: ImageResizer,
-    private loadingCtrl: LoadingController, private toastCtrl: ToastController, <b>private authHandler:AuthHandlerProvider,
+    private loadingCtrl: LoadingController, private toastCtrl: ToastController, private authHandler:AuthHandlerProvider<b>,
     private jsonStoreHandler:JsonStoreHandlerProvider, private upstreamImageSync: UpstreamImageSyncProvider</b>) {
     console.log('--> ReportNewPage constructor() called');
   }
@@ -1078,35 +1084,7 @@ export class ReportNewPage {
 }
 </code></pre>
 
-Delete redundant code from `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` as below:
-
-<pre><code>
-/// <reference path="../../../plugins/cordova-plugin-mfp/typings/worklight.d.ts" />
-
-import { Injectable } from '@angular/core';
-
-@Injectable()
-export class MyWardDataProvider {
-
-  constructor() {
-    console.log('--> MyWardDataProvider constructor() called');
-  }
-
-  getObjectStorageAccess() {
-    // console.log('--> MyWardDataProvider getting Object Storage AuthToken from adapter ...');
-    return new Promise((resolve, reject) => {
-      let dataRequest = new WLResourceRequest("/adapters/MyWardData/objectStorage", WLResourceRequest.GET);
-      dataRequest.send().then((response) => {
-        // console.log('--> MyWardDataProvider got Object Storage AuthToken from adapter ', response);
-        resolve(response.responseJSON);
-      }, (failure) => {
-        console.log('--> MyWardDataProvider failed to get Object Storage AuthToken from adapter\n', JSON.stringify(failure));
-        reject(failure);
-      })
-    });
-  }
-}
-</code></pre>
+### 4.4 Update *Home* page to show grievances reported in offline mode as well
 
 Update `IonicMobileApp/src/pages/home/home.html` as below:
 
@@ -1216,5 +1194,37 @@ export class HomePage {
     this.navCtrl.push(ProblemDetailPage, { grievance: grievance, baseUrl: this.offlineDirPath });
   }</b>
   ...
+}
+</code></pre>
+
+### 4.5 Delete redundant code
+
+Delete redundant functions from `IonicMobileApp/src/providers/my-ward-data/my-ward-data.ts` which now looks as below:
+
+<pre><code>
+/// &lt;reference path="../../../plugins/cordova-plugin-mfp/typings/worklight.d.ts" /&gt;
+
+import { Injectable } from '@angular/core';
+
+@Injectable()
+export class MyWardDataProvider {
+
+  constructor() {
+    console.log('--> MyWardDataProvider constructor() called');
+  }
+
+  getObjectStorageAccess() {
+    // console.log('--> MyWardDataProvider getting Object Storage AuthToken from adapter ...');
+    return new Promise((resolve, reject) => {
+      let dataRequest = new WLResourceRequest("/adapters/MyWardData/objectStorage", WLResourceRequest.GET);
+      dataRequest.send().then((response) => {
+        // console.log('--> MyWardDataProvider got Object Storage AuthToken from adapter ', response);
+        resolve(response.responseJSON);
+      }, (failure) => {
+        console.log('--> MyWardDataProvider failed to get Object Storage AuthToken from adapter\n', JSON.stringify(failure));
+        reject(failure);
+      })
+    });
+  }
 }
 </code></pre>
