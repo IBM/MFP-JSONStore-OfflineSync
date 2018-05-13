@@ -581,6 +581,7 @@ Update `IonicMobileApp/src/pages/home/home.ts` as below:
 ...
 export class HomePage {
   ...
+  <b>reloadData: boolean = false;</b>
 
   constructor(public navCtrl: NavController, public loadingCtrl: LoadingController,
     public myWardDataProvider: MyWardDataProvider, public imgCache: ImgCacheService,
@@ -602,8 +603,14 @@ export class HomePage {
       if (view.instance instanceof HomePage) {
         console.log('--> HomePage onSyncSuccessCallback() called');
         this.loadData();
+      } else {
+        this.reloadData = true;
       }
-    });</b>
+    });
+    if (this.reloadData) {
+      this.reloadData = false;
+      this.loadData();
+    }</b>
   }
 
   <b>loadData() {
@@ -805,6 +812,7 @@ export class JsonStoreHandlerProvider {
 
   onUpstreamSyncSuccess(data) {
     console.log('--> JsonStoreHandler onUpstreamSyncSuccess: ' + data);
+    this.syncMyWardData();
   }
 
   onUpstreamSyncFailure(error) {
