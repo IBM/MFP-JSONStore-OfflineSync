@@ -35,6 +35,7 @@ export class HomePage {
   objectStorageAccess: any;
   offlineGrievances: any;
   offlineDirPath: string;
+  reloadData: boolean = false;
 
   constructor(public navCtrl: NavController, public loadingCtrl: LoadingController,
     public imgCache: ImgCacheService, private authHandler:AuthHandlerProvider,
@@ -56,8 +57,14 @@ export class HomePage {
       if (view.instance instanceof HomePage) {
         console.log('--> HomePage onSyncSuccessCallback() called');
         this.loadData();
+      } else {
+        this.reloadData = true;
       }
     });
+    if (this.reloadData) {
+      this.reloadData = false;
+      this.loadData();
+    }
     this.loadOfflineDataFromJsonStore();
   }
 

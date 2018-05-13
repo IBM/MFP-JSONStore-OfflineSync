@@ -221,12 +221,15 @@ export class JsonStoreHandlerProvider {
   }
 
   onSyncSuccess(msg) {
-    console.log('--> JsonStoreHandler onSyncSuccess: ' + msg);
-    // TODO onSyncSuccessCallback should be called only if data has changed
-    if (this.onSyncSuccessCallback != null) {
-      this.onSyncSuccessCallback();
-    } else {
-      console.log('--> JsonStoreHandler: onSyncSuccessCallback not set!');
+    // Following check is a workaround for a bug in JSONStore sync where
+    // onSyncSuccess is called for both myward and newproblems collections
+    if (msg.includes('for collection ' + this.myWardCollectionName)) {
+      console.log('--> JsonStoreHandler onSyncSuccess: ' + msg);
+      if (this.onSyncSuccessCallback != null) {
+        this.onSyncSuccessCallback();
+      } else {
+        console.log('--> JsonStoreHandler: onSyncSuccessCallback not set!');
+      }
     }
   }
 
@@ -247,8 +250,13 @@ export class JsonStoreHandlerProvider {
     this.onSyncFailureCallback = onSyncFailure;
   }
 
-  onUpstreamSyncSuccess(data) {
-    console.log('--> JsonStoreHandler onUpstreamSyncSuccess: ' + data);
+  onUpstreamSyncSuccess(msg) {
+    // Following check is a workaround for a bug in JSONStore sync where
+    // onSyncSuccess is called for both myward and newproblems collections
+    if (msg.includes('for collection ' + this.newProblemsCollectionName)) {
+      console.log('--> JsonStoreHandler onUpstreamSyncSuccess: ' + msg);
+      this.syncMyWardData();
+    }
   }
 
   onUpstreamSyncFailure(error) {
