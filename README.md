@@ -117,8 +117,40 @@ Launch MFP Dashboard as below:
 Verify MFP Adapter configuration as below:
   * Inside the MFP dashboard, click on the `JSONStoreCloudantSync` adapter. Under `Configurations` tab, you should see the various properties we specified in [Step 5.3](#53-specify-cloudant-credentials-in-mfp-adapter) for accessing Cloudant database as shown below. As an alternative to specifying those property values in `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/adapter-resources/adapter.xml` as previously shown in [Step 5.3](#53-specify-cloudant-credentials-in-mfp-adapter), you can deploy the adapters with empty `defaultValue`, and once the adapter is deployed, change the values on this page.
 
-  <img src="doc/source/images/AdapterConfiguration.png" alt="Option to specify the credentials for accessing Cloudant NoSQL DB in deployed MFP Adapter" width="640" border="10" />
+  <img src="doc/source/images/AdapterConfiguration.png" alt="Option to specify the credentials for accessing Cloudant NoSQL DB in deployed MFP Adapter" width="800" border="10" />
 
   * Click on `Resources` tab. You should see the various REST APIs exposed by `JSONStoreCloudantSync` adapter as shown below. The `Security` column should show the protecting scope `UserLogin` against each REST method.
     
-  <img src="doc/source/images/AdapterProtectingScope.png" alt="The REST APIs of JSONStoreCloudantSync adapter are protected by UserLogin security scope" width="640" border="10" />
+  <img src="doc/source/images/AdapterProtectingScope.png" alt="The REST APIs of JSONStoreCloudantSync adapter are protected by UserLogin security scope" width="800" border="10" />
+
+### 6.3 Test the JSONStoreCloudantSync adapter
+
+Create temporary credentials to test adapter REST API as below:
+  * Inside the MFP dashboard, click on `Runtime Settings`. Click on `Confidential Clients`. Then click on `New`.
+  * In the form that pops up, specify values for `ID` and `Secret` as shown in snapshot below. For `Allowed Scope` enter `**` and click on `Add`. Finally click on `Save`.
+
+  <img src="doc/source/images/MFP_CreateCredentialsToTestAdapter.png" alt="MFP - Create Confidential Client to test Adapter REST APIs" width="1024" border="10" />
+
+Test adapter REST API as below:
+  * Inside the MFP dashboard, click on the `JSONStoreCloudantSync` adapter. Click on `Resources` and then click on `View Swagger Docs`. The Swagger UI for adapter REST APIs will get shown in a new window/tab.
+  * Inside the Swagger UI, click on `Expand Operations`.
+  * To test the `POST /getAllModifications` API, first click on `OFF` toggle button to enable authentication. Select `UserLogin` and click on `Authorize` as shown below. Enter the `ID` and `Secret` created above against `Username` and `Password`. Click `OK`. If authentication is successful, the toggle button will switch to `ON` position.
+
+  <img src="doc/source/images/AuthorizeSwaggerUI.png" alt="Authorize Swagger UI for running MFP Adapter REST APIs" width="1024" border="10" />
+
+  * Specify the following JSON object under POST body:
+```
+{
+  "_id": "string",
+  "_rev": "string",
+  "json": "{\"SeqID\": 0,\"DBName\": \"myward\"}"
+}
+```
+
+  * Finally click on `Try it out` button to run the `POST /getAllModifications` API. The API response should get shown in the `Response Body` as shown in snapshot below.
+
+  <img src="doc/source/images/SwaggerToolsForTestingMobileFirstAdapter.png" alt="Swagger UI for testing MobileFirst Adapters" width="1024" border="10" />
+
+Delete the temporary credentials after testing adapter REST API as below:
+  * Inside the MFP dashboard, click on `Runtime Settings`. Click on `Confidential Clients`.
+  * Delete the `Client ID` created previously.
