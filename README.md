@@ -72,3 +72,53 @@ Open `MobileFoundationAdapters/MyWardData/src/main/adapter-resources/adapter.xml
   &lt;property name="apiKey" displayName="Cloud Object Storage API Key" defaultValue=""/&gt;</b>
 &lt;/mfp:adapter&gt;
 </code></pre>
+
+## Step 6. Deploy the MFP Adapters and Test them
+
+### 6.1 Build and Deploy the MFP adapters
+
+Build and deploy `UserLogin` Adapter as below.
+
+```
+$ cd MobileFoundationAdapters/
+
+$ cd UserLogin
+$ mfpdev adapter build
+$ mfpdev adapter deploy
+```
+
+  Note: In [Step 4](https://github.com/IBM/Ionic-MFP-App#step-4-create-mobile-foundation-service-and-configure-mfp-cli), if you specified `No` to `Make this server the default?`, then you need to specify the name of your server profile (`Cloud-MFP` in our case) at the end of `mfpdev adapter deploy` command as shown below.
+```
+$ mfpdev adapter deploy Cloud-MFP
+```
+
+Build and deploy `MyWardData` adapter as below.
+
+```
+$ cd ../MyWardData/
+$ mfpdev adapter build
+$ mfpdev adapter deploy
+```
+
+Build and deploy `JSONStoreCloudantSync` adapter as below.
+
+```
+$ cd ../JSONStoreCloudantSync/
+$ mfpdev adapter build
+$ mfpdev adapter deploy
+```
+
+### 6.2 Launch MFP dashboard and verify adapter configurations
+
+Launch MFP Dashboard as below:
+  * In the [IBM Cloud dashboard](https://console.bluemix.net/dashboard/), under `Cloud Foundry Services`, click on the `Mobile Foundation` service you created in [Step 4](https://github.com/IBM/Ionic-MFP-App#step-4-create-mobile-foundation-service-and-configure-mfp-cli). The service overview page that gets shown, will have the MFP dashboard embedded within it. You can also open the MFP dashboard in a separate browser tab by appending `/mfpconsole` to the *url* mentioned in [Step 4](https://github.com/IBM/Ionic-MFP-App#step-4-create-mobile-foundation-service-and-configure-mfp-cli).
+  * Inside the MFP dashboard, in the list on the left, you will see the `JSONStoreCloudantSync`, `UserLogin` and `MyWardData` adapters listed.
+
+Verify MFP Adapter configuration as below:
+  * Inside the MFP dashboard, click on the `JSONStoreCloudantSync` adapter. Under `Configurations` tab, you should see the various properties we specified in [Step 5.3](#53-specify-cloudant-credentials-in-mfp-adapter) for accessing Cloudant database as shown below. As an alternative to specifying those property values in `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/adapter-resources/adapter.xml` as previously shown in [Step 5.3](#53-specify-cloudant-credentials-in-mfp-adapter), you can deploy the adapters with empty `defaultValue`, and once the adapter is deployed, change the values on this page.
+
+  <img src="doc/source/images/AdapterConfiguration.png" alt="Option to specify the credentials for accessing Cloudant NoSQL DB in deployed MFP Adapter" width="640" border="10" />
+
+  * Click on `Resources` tab. You should see the various REST APIs exposed by `JSONStoreCloudantSync` adapter as shown below. The `Security` column should show the protecting scope `UserLogin` against each REST method.
+    
+  <img src="doc/source/images/AdapterProtectingScope.png" alt="The REST APIs of JSONStoreCloudantSync adapter are protected by UserLogin security scope" width="640" border="10" />
