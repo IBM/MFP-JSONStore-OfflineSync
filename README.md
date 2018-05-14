@@ -150,7 +150,14 @@ Test adapter REST API as below:
   * Finally click on `Try it out` button to run the `POST /getAllModifications` API. The API response should get shown in the `Response Body` as shown in snapshot below.
 
   <img src="doc/source/images/SwaggerToolsForTestingMobileFirstAdapter.png" alt="Swagger UI for testing MobileFirst Adapters" width="1024" border="10" />
-
+  
 Delete the temporary credentials after testing adapter REST API as below:
   * Inside the MFP dashboard, click on `Runtime Settings`. Click on `Confidential Clients`.
   * Delete the `Client ID` created previously.
+
+
+## Step 7. Run application on Android phone
+
+Follow the instructions in [Step 7](https://github.com/IBM/Ionic-MFP-App#step-7-run-application-on-android-phone) of base project to run the application on Android phone.
+
+## Step 8. Test the app functionality in offline mode
