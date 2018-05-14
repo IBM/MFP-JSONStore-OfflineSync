@@ -44,7 +44,7 @@ Open `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/adapter-resources/
  * For property `createDatabaseIfItDoesNotExist`, leave the default value of `false` as-is.
 
 <pre><code>
-&lt;mfp:adapter name="MyWardData" ...&gt;
+&lt;mfp:adapter name="JSONStoreCloudantSync" ...&gt;
   <b>&lt;property name="account" displayName="Cloudant account" defaultValue=""/&gt;
   &lt;property name="key" displayName="Cloudant key" defaultValue=""/&gt;
   &lt;property name="password" displayName="Cloudant password" defaultValue=""/&gt;</b>
