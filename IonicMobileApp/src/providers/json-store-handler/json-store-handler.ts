@@ -57,7 +57,7 @@ export class JsonStoreHandlerProvider {
   };
   myWardCollectionOptions = {
     syncPolicy: 0,
-    syncAdapterPath:'CloudantJava',
+    syncAdapterPath:'JSONStoreCloudantSync',
     onSyncSuccess: this.onSyncSuccess.bind(this),
     onSyncFailure: this.onSyncFailure.bind(this),
     username: null,
@@ -73,7 +73,7 @@ export class JsonStoreHandlerProvider {
   };
   newProblemsCollectionOptions = {
     syncPolicy: 1,
-    syncAdapterPath:'CloudantJava',
+    syncAdapterPath:'JSONStoreCloudantSync',
     onSyncSuccess: this.onUpstreamSyncSuccess.bind(this),
     onSyncFailure: this.onUpstreamSyncFailure.bind(this),
     username: null,
