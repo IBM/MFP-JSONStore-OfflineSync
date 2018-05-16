@@ -221,3 +221,14 @@ Note: In the current implementation, images and its thumbnails are stored as-is 
 * Get the device online by turning on either `Mobile data` or `Wi-Fi`.
 * In a while the newly reported grievance would get uploaded to server and page would get refreshed to show new list of grievances as seen on server. Make sure that the grievance that you just reported is listed as well.
 * On a different device, whoever launches the app (or clicks on refresh button) should see your newly reported grievance.
+
+# Troubleshooting
+
+Please see instructions for [debugging Android hybrid app using Chrome Developer Tools](https://github.com/IBM/Ionic-MFP-App#debugging-android-hybrid-app-using-chrome-developer-tools) or [troubleshooting guide](https://github.com/IBM/Ionic-MFP-App/blob/master/TROUBLESHOOTING.md) for solutions to some commonly occuring problems.
+
+# References
+
+* [Offline authentication using JSONStore](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/7.0/authentication-security/offline-authentication/)
+
+# License
+[Apache 2.0](LICENSE)
