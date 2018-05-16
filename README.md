@@ -1,6 +1,20 @@
 # - Work in progress -
 
-# MFP-JSONStore-OfflineSync
+# Secure Offline Synchronization using IBM Mobile Foundation
+The increasing focus on Digital Transformation has led to more and more use cases where organizations want their enterprise apps to be usable even when the device is offline, and later synchronize the data with the enterprise when the device comes online again. In addition, organizations want to leverage the benefits of:
+* hybrid mobile apps where a single code base, developed using standard web technologies, works across platforms - Android, iOS and Windows phones, thereby enabling organizations to more easily embrace the policy of bring your own device (BYOD).
+* cloud hosted mobile backend servers for robust handling of security challenges posed by above scenarios, backend integration, app life cycle management and app analytics.
+
+In this IBM code pattern, we will show you how to combine the following technologies to securely implement the mobile offline synchronization use case.
+* IBM Mobile Foundation - the enterprise grade mobile backend server available as a service on IBM Cloud,
+* Ionic framework - an open-source SDK for hybrid mobile app development built on top of Apache Cordova and Angular,
+* JSONStore - the encrypted on device storage & automated data sync for better app performance & offline access,
+* IBM Cloudant - a fully managed NoSQL JSON database service available on IBM Cloud, and
+* IBM Cloud Object Storage - A highly scalable cloud storage service, designed for high durability, resiliency and security.
+
+## Flow
+
+<img src="doc/source/images/Architecture.png" alt="Architecture diagram" width="1024" border="10" />
 
 ## Included Components
 * [Cloudant NoSQL DB](https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db): A fully managed data layer designed for modern web and mobile applications that leverages a flexible JSON schema.
