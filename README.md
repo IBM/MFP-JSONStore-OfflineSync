@@ -3,6 +3,23 @@
 # MFP-JSONStore-OfflineSync
 
 # Steps
+* [1. Setup Ionic and MFP CLI](https://github.com/IBM/Ionic-MFP-App#step-1-setup-ionic-and-mfp-cli)
+* [2. Create Cloudant database and populate it with sample data](https://github.com/IBM/Ionic-MFP-App#step-2-create-cloudant-database-and-populate-it-with-sample-data)
+* [3. Create IBM Cloud Object Storage service and populate it with sample data](https://github.com/IBM/Ionic-MFP-App#step-3-create-ibm-cloud-object-storage-service-and-populate-it-with-sample-data)
+* [4. Create Mobile Foundation service and configure MFP CLI](https://github.com/IBM/Ionic-MFP-App#step-4-create-mobile-foundation-service-and-configure-mfp-cli)
+* [5. Download source repo and customize](#step-5-download-source-repo-and-customize)
+  - [5.1 Clone repo](#51-clone-repo)
+  - [5.2 Update App ID, Name and Description](#52-update-app-id-name-and-description)
+  - [5.3 Specify Cloudant credentials in MFP adapter](#53-specify-cloudant-credentials-in-mfp-adapter)
+  - [5.4 Specify Cloud Object Storage credentials in MFP Adapter](#54-specify-cloud-object-storage-credentials-in-mfp-adapter)
+* [6. Deploy the MFP Adapters and Test them](#step-6-deploy-the-mfp-adapters-and-test-them)
+  - [6.1 Build and Deploy the MFP adapters](#61-build-and-deploy-the-mfp-adapters)
+  - [6.2 Launch MFP dashboard and verify adapter configurations](#62-launch-mfp-dashboard-and-verify-adapter-configurations)
+  - [6.3 Test the JSONStoreCloudantSync adapter](#63-test-the-jsonstorecloudantsync-adapter)
+* [7. Run application on Android phone](https://github.com/IBM/Ionic-MFP-App#step-7-run-application-on-android-phone)
+* [8. Test the app functionality in offline mode](#step-8-test-the-app-functionality-in-offline-mode)
+  - [8.1 Test app in online mode](#81-test-app-in-online-mode)
+  - [8.2 Test app in offline mode](#82-test-app-in-offline-mode)
 
 ## Prerequisite steps
 This project builds on top of https://github.com/IBM/Ionic-MFP-App. Run following steps from that [base project](https://github.com/IBM/Ionic-MFP-App) to provision the needed mobile backend services from IBM Cloud and populate them with sample data, as well as to setup Ionic and MFP CLI on your development machine.
