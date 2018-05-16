@@ -95,6 +95,7 @@ export class JsonStoreHandlerProvider {
         // console.log('--> JsonStoreHandler: collections have already been initialized for username: ' + username);
         return resolve();
       }
+      let timeBegin = performance.now();
       console.log('--> JsonStoreHandler: initCollections called');
       let encodedUsername = this.convertToJsonStoreCompatibleUsername(username);
       console.log('--> JsonStoreHandler: username after encoding: ' + encodedUsername);
@@ -106,27 +107,34 @@ export class JsonStoreHandlerProvider {
       }
       WL.JSONStore.closeAll({});
       WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
-        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection.');
+        let timeEnd = performance.now();
+        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
         this.isCollectionInitialized[username] = true;
         if (isOnline) {
           this.initCollectionForOfflineLogin();
         }
 
+        timeBegin = performance.now();
         this.myWardCollectionOptions.username = encodedUsername;
         this.myWardCollectionOptions.password = password;
         WL.JSONStore.init(this.myWardCollections, this.myWardCollectionOptions).then((success) => {
-          console.log('--> JsonStoreHandler: successfully initialized \'' + this.myWardCollectionName + '\' JSONStore collection.');
+          timeEnd = performance.now();
+          console.log('--> JsonStoreHandler: successfully initialized \'' + this.myWardCollectionName + '\' JSONStore collection. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
 
+          timeBegin = performance.now();
           WL.JSONStore.init(this.objectStorageDetailsCollections, options).then((success) => {
-            console.log('--> JsonStoreHandler: successfully initialized \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.');
+            timeEnd = performance.now();
+            console.log('--> JsonStoreHandler: successfully initialized \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
             if (isOnline) {
               this.loadObjectStorageAccess.bind(this)();
             }
 
+            timeBegin = performance.now();
             this.newProblemsCollectionOptions.username = encodedUsername;
             this.newProblemsCollectionOptions.password = password;
             WL.JSONStore.init(this.newProblemsCollections, this.newProblemsCollectionOptions).then((success) => {
-              console.log('--> JsonStoreHandler: successfully initialized \'' + this.newProblemsCollectionName + '\' JSONStore collection.');
+              timeEnd = performance.now();
+              console.log('--> JsonStoreHandler: successfully initialized \'' + this.newProblemsCollectionName + '\' JSONStore collection. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
               resolve();
             }, (failure) => {
               console.log('--> JsonStoreHandler: failed to initialize \'' + this.newProblemsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
