@@ -162,6 +162,7 @@ Follow the instructions in [Step 7](https://github.com/IBM/Ionic-MFP-App#step-7-
 
 ## Step 8. Test the app functionality in offline mode
 
+### How the app works in offline mode
 A note on how the offline mode is supported for each of the pages<sup>\*</sup> in MyWard app: (<sup>\*</sup>Ionic page is the equivalent of [iOS View](https://developer.apple.com/library/content/documentation/WindowsViews/Conceptual/ViewPG_iPhoneOS/CreatingViews/CreatingViews.html) or [Android Activity](https://developer.android.com/guide/components/activities/))
 
 * `Login` page:
@@ -183,3 +184,22 @@ A note on how the offline mode is supported for each of the pages<sup>\*</sup> i
   - Image and its thumbnail are stored on local storage, and are later uploaded to Cloud Object Storage when devices comes online.
 
 Note: In the current implementation, images and its thumbnails are stored as-is on the local file storage at [cordova.file.dataDirectory](https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-file/#where-to-store-files) which is private to the application. If you have a more stringent compliance requirement of having to encrypt the images stored locally on the phone, then follow the recommendations on [this](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/8.0/application-development/jsonstore/#security-utilities) page.
+
+### Test app in online mode
+* Build and run the application on your phone as per instructions in [Step 7.6](https://github.com/IBM/Ionic-MFP-App/blob/master/README.md#76-buildrun-the-ionic-application-on-android-phone).
+* Login with username say `Test` and password `Test`. (Note: We have used a simple MFP security adapter that returns success when password equals username.)
+* Make sure that the `Home` page displays list of grievances along with image thumbnails.
+* Click on a few of the grievances to see their details. On the `Problem Detail` page, make sure that the image and Google Maps location are displayed.
+* Back on the `Home` page, click on the `+` icon to report a new grievance. Add description, take photo, grab gelocation and finally submit. Make sure that the new grievance is successfully submitted to server.
+
+### Test app in offline mode
+* Have the device go offline by turning off `Mobile data` and `Wi-Fi`.
+* Launch the `MyWard` app.
+* Login using the same username and password as before. Make sure login succeeds even in offline mode.
+* Make sure that the `Home` page displays list of grievances along with image thumbnails.
+* Click on the grievances for which you had seen the details before. Make sure that the image and Google Maps location are displayed even in offline mode.
+* Back on the `Home` page, click on the `+` icon to report a new grievance. Add description, take photo, grab gelocation and finally submit. Make sure that the new grievance report is successfully accepted even in offline mode.
+* Back on the `Home` page, the newly reported problem should get listed at the end along with its thumbnail. Upon clicking it, the `Problem Detail` page should show image.
+* Get the device online by turning on either `Mobile data` or `Wi-Fi`.
+* In a while the newly reported grievance would get uploaded to server and page would get refreshed to show new list of grievances as seen on server. Make sure that the grievance that you just reported is listed as well.
+* On a different device, whoever launches the app (or clicks on refresh button) should see your newly reported grievance.
