@@ -162,23 +162,24 @@ Follow the instructions in [Step 7](https://github.com/IBM/Ionic-MFP-App#step-7-
 
 ## Step 8. Test the app functionality in offline mode
 
-A note on how the offline mode is supported for each of the pages in MyWard app: (Note: Ionic page is the equivalent of [iOS View](https://developer.apple.com/library/content/documentation/WindowsViews/Conceptual/ViewPG_iPhoneOS/CreatingViews/CreatingViews.html) or [Android Activity](https://developer.android.com/guide/components/activities/))
+A note on how the offline mode is supported for each of the pages<sup>*</sup> in MyWard app: (<sup>*</sup>Ionic page is the equivalent of [iOS View](https://developer.apple.com/library/content/documentation/WindowsViews/Conceptual/ViewPG_iPhoneOS/CreatingViews/CreatingViews.html) or [Android Activity](https://developer.android.com/guide/components/activities/))
 
 * `Login` page:
-  - The first time the app is launched (after installation), the user login will work only in online mode. This is to make sure that the user credentials are validated by making a call to MFP security adapter. Once the user authentication succeeds, subsequent login attempts by the same user are supported in offline mode with the help of encrypted JSONStore.
+  - The first time the app is launched after installation, the user login will work only in online mode. This is to make sure that the user credentials are validated by making a call to MFP security adapter. Once the user authentication succeeds, subsequent login attempts by the same user are supported in offline mode with the help of encrypted [JSONStore](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/7.0/authentication-security/offline-authentication/).
 
 * `Home` page: (downstream sync)
-  - JSONStore sync for Cloudant data
-  - imgcache.js caches the image thumbnails loaded from Cloud Object Storage
+  - [JSONStore](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/8.0/application-development/jsonstore/) for storing/syncing data with Cloudant.
+  - [imgcache.js](https://github.com/chrisben/imgcache.js/) for caching the image thumbnails loaded from Cloud Object Storage.
 
 * `Problem Detail` page: (downstream sync)
-  
-  For those grievances for which the deatils are previously seen in online mode:
-  - JSONStore for Cloudant data
-  - imgcache.js caches image loaded from Cloud Object Storage
-  - [Cordova plugin for Google Maps](https://github.com/mapsplugin/cordova-plugin-googlemaps#what-is-the-difference-between-this-plugin-and-google-maps-javascript-api-v3) makes sure that the map view even works if the device is offline
+
+  Grievances for which the deatils are already seen in online mode:
+  - JSONStore for storing/syncing data with Cloudant.
+  - imgcache.js for caching the image loaded from Cloud Object Storage.
+  - [Cordova plugin for Google Maps](https://github.com/mapsplugin/cordova-plugin-googlemaps#what-is-the-difference-between-this-plugin-and-google-maps-javascript-api-v3) to make sure that the map view works even in offline mode.
 
 * `Report New Problem` page: (upstream sync)
-  - Data to be uploaded to Cloudant stored in JSONStore which later syncs it with Cloudant when device comes online.
-  - Image and thumbnail stored in local storage, and later uploaded to Cloud Object Storage when devices comes online.
-  - Google Maps view will work for previously visited regions.
+  - Data to be uploaded to Cloudant is stored in JSONStore which later syncs it with Cloudant when device comes online.
+  - Image and its thumbnail are stored on local storage, and are later uploaded to Cloud Object Storage when devices comes online.
+
+Note: In the current implementation, images and its thumbnails are stored as-is on the local file storage at [cordova.file.dataDirectory](https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-file/#where-to-store-files) which is private to the application. If you have a more stringent compliance requirement of having to encrypt the images stored locally on the phone, then follow the recommendations on [this](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/8.0/application-development/jsonstore/#security-utilities) page.
