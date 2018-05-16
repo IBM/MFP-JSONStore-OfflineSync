@@ -191,6 +191,7 @@ Note: In the current implementation, images and its thumbnails are stored as-is 
 * Make sure that the `Home` page displays list of grievances along with image thumbnails.
 * Click on a few of the grievances to see their details. On the `Problem Detail` page, make sure that the image and Google Maps location are displayed.
 * Back on the `Home` page, click on the `+` icon to report a new grievance. Add description, take photo, grab gelocation and finally submit. Make sure that the new grievance is successfully submitted to server.
+* On a different device, whoever launches the app (or clicks on refresh button) should see your newly reported grievance.
 
 ### 8.2 Test app in offline mode
 * Have the device go offline by turning off `Mobile data` and `Wi-Fi`.
