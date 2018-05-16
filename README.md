@@ -161,3 +161,24 @@ Delete the temporary credentials after testing adapter REST API as below:
 Follow the instructions in [Step 7](https://github.com/IBM/Ionic-MFP-App#step-7-run-application-on-android-phone) of base project to run the application on Android phone.
 
 ## Step 8. Test the app functionality in offline mode
+
+A note on how the offline mode is supported for each of the pages in MyWard app: (Note: Ionic page is the equivalent of [iOS View](https://developer.apple.com/library/content/documentation/WindowsViews/Conceptual/ViewPG_iPhoneOS/CreatingViews/CreatingViews.html) or [Android Activity](https://developer.android.com/guide/components/activities/))
+
+* `Login` page:
+  - The first time the app is launched (after installation), the user login will work only in online mode. This is to make sure that the user credentials are validated by making a call to MFP security adapter. Once the user authentication succeeds, subsequent login attempts by the same user are supported in offline mode with the help of encrypted JSONStore.
+
+* `Home` page: (downstream sync)
+  - JSONStore sync for Cloudant data
+  - imgcache.js caches the image thumbnails loaded from Cloud Object Storage
+
+* `Problem Detail` page: (downstream sync)
+  
+  For those grievances for which the deatils are previously seen in online mode:
+  - JSONStore for Cloudant data
+  - imgcache.js caches image loaded from Cloud Object Storage
+  - [Cordova plugin for Google Maps](https://github.com/mapsplugin/cordova-plugin-googlemaps#what-is-the-difference-between-this-plugin-and-google-maps-javascript-api-v3) makes sure that the map view even works if the device is offline
+
+* `Report New Problem` page: (upstream sync)
+  - Data to be uploaded to Cloudant stored in JSONStore which later syncs it with Cloudant when device comes online.
+  - Image and thumbnail stored in local storage, and later uploaded to Cloud Object Storage when devices comes online.
+  - Google Maps view will work for previously visited regions.
