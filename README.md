@@ -185,14 +185,14 @@ A note on how the offline mode is supported for each of the pages<sup>\*</sup> i
 
 Note: In the current implementation, images and its thumbnails are stored as-is on the local file storage at [cordova.file.dataDirectory](https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-file/#where-to-store-files) which is private to the application. If you have a more stringent compliance requirement of having to encrypt the images stored locally on the phone, then follow the recommendations on [this](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/8.0/application-development/jsonstore/#security-utilities) page.
 
-### Test app in online mode
+### 8.1 Test app in online mode
 * Build and run the application on your phone as per instructions in [Step 7.6](https://github.com/IBM/Ionic-MFP-App/blob/master/README.md#76-buildrun-the-ionic-application-on-android-phone).
 * Login with username say `Test` and password `Test`. (Note: We have used a simple MFP security adapter that returns success when password equals username.)
 * Make sure that the `Home` page displays list of grievances along with image thumbnails.
 * Click on a few of the grievances to see their details. On the `Problem Detail` page, make sure that the image and Google Maps location are displayed.
 * Back on the `Home` page, click on the `+` icon to report a new grievance. Add description, take photo, grab gelocation and finally submit. Make sure that the new grievance is successfully submitted to server.
 
-### Test app in offline mode
+### 8.2 Test app in offline mode
 * Have the device go offline by turning off `Mobile data` and `Wi-Fi`.
 * Launch the `MyWard` app.
 * Login using the same username and password as before. Make sure login succeeds even in offline mode.
