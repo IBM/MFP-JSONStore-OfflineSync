@@ -31,6 +31,9 @@ export class AuthHandlerProvider {
   loginSuccessCallback = null;
   loginFailureCallback = null;
 
+  timeBegin = null;
+  timeEnd = null;
+
   constructor(private jsonStoreHandler:JsonStoreHandlerProvider) {
     console.log('--> AuthHandler constructor() called');
   }
@@ -102,11 +105,17 @@ export class AuthHandlerProvider {
 
   login(username, password) {
     console.log('--> AuthHandler login called. isChallenged = ' + this.isChallenged);
+    this.timeBegin = performance.now();
     this.username = username;
     this.userLoginChallengeHandler.handleSuccess = () => {
       console.log('--> AuthHandler handleSuccess called');
       this.isChallenged = false;
+      this.timeEnd = performance.now();
+      console.log('--> AuthHandler: Time spent in server login = ' + (this.timeEnd - this.timeBegin) + ' ms.');
+      this.timeBegin = performance.now();
       this.jsonStoreHandler.initCollections(username, password, true).then(() => {
+        this.timeEnd = performance.now();
+        console.log('--> AuthHandler: Time spent in initializing all collections = ' + (this.timeEnd - this.timeBegin) + ' ms.');
         this.loginSuccessCallback();
       });
     };
