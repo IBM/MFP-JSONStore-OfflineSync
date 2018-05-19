@@ -215,7 +215,7 @@ A note on how the offline mode is supported for each of the pages<sup>\*</sup> i
 
 * `Problem Detail` page: (downstream sync)
 
-  Grievances for which the deatils are already seen in online mode:
+  Grievances for which the details are already seen in online mode:
   - JSONStore for storing/syncing data with Cloudant.
   - imgcache.js for caching the image loaded from Cloud Object Storage.
   - [Cordova plugin for Google Maps](https://github.com/mapsplugin/cordova-plugin-googlemaps#what-is-the-difference-between-this-plugin-and-google-maps-javascript-api-v3) to make sure that the map view works even in offline mode.
@@ -231,7 +231,7 @@ Note: In the current implementation, images and its thumbnails are stored as-is 
 * Login with username say `Test` and password `Test`. (Note: We have used a simple MFP security adapter that returns success when password equals username.)
 * Make sure that the `Home` page displays list of grievances along with image thumbnails.
 * Click on a few of the grievances to see their details. On the `Problem Detail` page, make sure that the image and Google Maps location are displayed.
-* Back on the `Home` page, click on the `+` icon to report a new grievance. Add description, take photo, grab gelocation and finally submit. Make sure that the new grievance is successfully submitted to server.
+* Back on the `Home` page, click on the `+` icon to report a new grievance. Add description, take photo, grab geolocation and finally submit. Make sure that the new grievance is successfully submitted to server.
 * On a different device, whoever launches the app (or clicks on refresh button) should see your newly reported grievance.
 
 ### 8.2 Test app in offline mode
