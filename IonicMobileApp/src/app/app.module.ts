@@ -20,6 +20,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { StatusBar } from '@ionic-native/status-bar';
 import { ImgCacheModule } from 'ng-imgcache';
 import { GoogleMaps } from '@ionic-native/google-maps';
+import { NativeGeocoder } from '@ionic-native/native-geocoder';
 import { Camera } from '@ionic-native/camera';
 import { File } from '@ionic-native/file';
 import { FileTransfer } from '@ionic-native/file-transfer';
@@ -64,6 +65,7 @@ import { UpstreamImageSyncProvider } from '../providers/upstream-image-sync/upst
     AuthHandlerProvider,
     MyWardDataProvider,
     GoogleMaps,
+    NativeGeocoder,
     Camera,
     File,
     FileTransfer,
