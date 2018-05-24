@@ -14,7 +14,29 @@ In this IBM code pattern, we will show you how to combine the following technolo
 
 ## Flow
 
+### Online scenario
 <img src="doc/source/images/Architecture.png" alt="Architecture diagram" width="1024" border="10" />
+
+1. When there is network connectivity, user installs and launches the mobile app, enters his/her credentials on the login screen and clicks `Login`.
+2. Mobile app sends the user credentials to MFP server for validation.
+3. MFP server invokes the security adapter logic to validate user credentials and returns an appropriate response to the mobile app. For the sake of this demo, we will use a simple security adapter that returns success when password equals username.
+4. If user authentication succeeds, mobile app initializes JSONStore collection with the current username and password. 
+5. Mobile app initiates data synchronization with Cloudant database by making a call to MFP sync adapter.
+6. MFP sync adapter makes REST calls to Cloudant database and returns synchronization data to the mobile app. The data fetched from Cloudant database will have references to the images stored on Cloud Object Storage.
+7. In parallel to step 5 above, mobile app makes a call to MFP adapter to get the Authorization token for interacting with Cloud Object Storage service.
+8. MFP adapter makes a call to Cloud Object Storage service's token manager endpoint to get the Authorization token
+and returns it to the mobile app.
+9. Mobile app initializes image-caching plugin and asks it to use an HTTP header of `Authorization=<value returned from MFP adapter>` while fetching images.
+10. Once JSONStore synchronization is complete and Cloud Object Storage Authorization token is fetched, mobile app displays the synchronized data from JSONStore as a list of items on the Home page.
+11. The image caching plugin running on the mobile app downloads and caches images from Cloud Object Storage.
+12. User clicks on one of the list item to see more details. A detail page is shown consisting of image and geo-location marked inside Google Maps.
+13. Back in the home page, user clicks on `+` button to report a new civic problem. A new page is shown where user can enter a description for the new civic problem as well as capture image and geo-location of the problem spot. User clicks on `Submit` button.
+14. Mobile app stores the new data into JSONStore collection, which automatically initiates synchronization of the new data with Cloudant database by making a call to MFP sync adapter.
+15. MFP sync adapter POSTs the new data to Cloudant database.
+16. In parallel to step 14 above, mobile app creates a thumbnail image by resizing the captured image and uploads both the captured image and thumbnail to Cloud Object Storage.
+17. Other users who click on refresh button on the home page (and those who log in afresh) are shown the updated list of problem reports.
+
+### Offline scenario
 
 ## Included Components
 * [Cloudant NoSQL DB](https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db): A fully managed data layer designed for modern web and mobile applications that leverages a flexible JSON schema.
