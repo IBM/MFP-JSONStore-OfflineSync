@@ -27,14 +27,13 @@ In this IBM code pattern, we will show you how to combine the following technolo
 8. MFP adapter makes a call to Cloud Object Storage service's token manager endpoint to get the Authorization token
 and returns it to the mobile app.
 9. Mobile app initializes image-caching plugin and asks it to use an HTTP header of `Authorization=<value returned from MFP adapter>` while fetching images.
-10. Once JSONStore synchronization is complete and Cloud Object Storage Authorization token is fetched, mobile app displays the synchronized data from JSONStore as a list of items on the `Home` page.
-11. The image caching plugin running on the mobile app downloads and caches images from Cloud Object Storage.
-12. User clicks on one of the list item to see more details. A detail page is shown consisting of image and geo-location marked inside Google Maps.
-13. Back in the home page, user clicks on `+` button to report a new civic problem. A new page is shown where user can enter a description for the new civic problem as well as capture image and geo-location of the problem spot. User clicks on `Submit` button.
-14. Mobile app stores the new data into JSONStore collection, which automatically initiates synchronization of the new data with Cloudant database by making a call to MFP sync adapter.
-15. MFP sync adapter POSTs the new data to Cloudant database.
-16. In parallel to step 14 above, mobile app creates a thumbnail image by resizing the captured image and uploads both the captured image and thumbnail to Cloud Object Storage.
-17. Other users who click on refresh button on the home page (and those who log in afresh) are shown the updated list of problem reports.
+10. Once JSONStore synchronization is complete and Cloud Object Storage Authorization token is fetched, mobile app displays the synchronized data from JSONStore as a list of items on the `Home` page. The image caching plugin running on the mobile app downloads and caches images from Cloud Object Storage.
+11. User clicks on one of the list item to see more details. A detail page is shown consisting of image and geo-location marked inside Google Maps.
+12. Back in the home page, user clicks on `+` button to report a new civic problem. A new page is shown where user can enter a description for the new civic problem as well as capture image and geo-location of the problem spot. User clicks on `Submit` button.
+13. Mobile app stores the new data into JSONStore collection, which automatically initiates synchronization of the new data with Cloudant database by making a call to MFP sync adapter.
+14. MFP sync adapter POSTs the new data to Cloudant database.
+15. In parallel to step 14 above, mobile app creates a thumbnail image by resizing the captured image and uploads both the captured image and thumbnail to Cloud Object Storage.
+16. Other users who click on refresh button on the home page (and those who log in afresh) are shown the updated list of problem reports.
 
 ### Offline scenario
 <img src="doc/source/images/Architecture_Scenario2.png" alt="Architecture diagram - offline scenario" width="1024" border="10" />
@@ -44,7 +43,7 @@ and returns it to the mobile app.
 3. If user authentication succeeds (through successful JSONStore init), mobile app reads data from the (previously synchronised) JSONStore collection, and shows the list of civic problems on the `Home` page.
 4. User can click on one of the problems to see more details. In case the problem detail was previously seen when the device was online, then the problem's image would have been cached by [imgcache.js](https://github.com/chrisben/imgcache.js/), and the [Cordova plugin for Google Maps](https://github.com/mapsplugin/cordova-plugin-googlemaps#what-is-the-difference-between-this-plugin-and-google-maps-javascript-api-v3) would make sure that the map view works even in offline mode.
 5. Back in the home page, user clicks on `+` button to report a new civic problem. A new page is shown where user can enter a description for the new civic problem as well as capture image and geo-location of the problem spot. User clicks on `Submit` button.
-6. Mobile app stores the new data in JSONStore collection, and the image on local file storage. Back on the `Home` page, user can see the new problem listed.
+6. Mobile app stores the new data in JSONStore collection, and the image and its thumbnail on local file storage. Back on the `Home` page, user can see the new problem listed.
 7. At at later time, when the device comes online, the mobile app automatically initiates the synchronization of JSONStore collection with Cloudant database by making a call to MFP sync adapter.
 8. MFP sync adapter POSTs new data to Cloudant database.
 9. In parallel to step 7 above, mobile app fetches Authorization token for interacting with Cloud Object Storage service by making a call to MFP adapter, and then uploads the new images to Cloud Object Storage.
