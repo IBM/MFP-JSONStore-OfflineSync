@@ -12,6 +12,12 @@ In this IBM code pattern, we will show you how to combine the following technolo
 * IBM Cloudant - a fully managed NoSQL JSON database service available on IBM Cloud, and
 * IBM Cloud Object Storage - A highly scalable cloud storage service, designed for high durability, resiliency and security.
 
+When you have completed this code pattern, you will understand:
+* How to achieve offline user authentication in mobile apps using JSONStore.
+* How to store data securely on the device using encrypted JSONStore.
+* How to achieve downstream and upstream synchronization of data between CouchDB/Cloudant database and the device using JSONStore's automated data synchronization feature.
+* How to achieve downstream and upstream synchronization of images between Cloud Object Storage and the device using [imgCache.js](https://github.com/chrisben/imgcache.js/) and [Cordova File API](https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-file/).
+
 ## Flow
 
 ### Online scenario
