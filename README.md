@@ -293,6 +293,7 @@ Please see instructions for [debugging Android hybrid app using Chrome Developer
 
 * [JSONStore - Encrypted on device storage & automated data sync for better app performance & offline access](http://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/8.0/application-development/jsonstore/)
 * [Offline authentication using JSONStore](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/7.1/advanced-topics/offline-authentication/)
+* [Automated synchronization of JSONStore collections with CouchDB databases](https://mobilefirstplatform.ibmcloud.com/blog/2018/02/23/jsonstoresync-couchdb-databases/)
 * [cordova-plugin-file - a File API allowing read/write access to files residing on the device](https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-file/)
 
 # License
