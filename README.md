@@ -289,6 +289,23 @@ Note: In the current implementation, images and its thumbnails are stored as-is 
 
 Please see instructions for [debugging Android hybrid app using Chrome Developer Tools](https://github.com/IBM/Ionic-MFP-App#debugging-android-hybrid-app-using-chrome-developer-tools) or [troubleshooting guide](https://github.com/IBM/Ionic-MFP-App/blob/master/TROUBLESHOOTING.md) for solutions to some commonly occuring problems.
 
+### Clearing JSONStore data on the phone
+In case the JSONStore data on the phone gets messed up during app development/testing, then you can clear it as per the instructions below.
+
+* Install Google Chrome.
+
+* Open Google Chrome. Open URL `chrome://inspect/#devices`
+
+* Under `Devices`, click on `Inspect` below your connected device.
+
+* Click on `Console` view.
+
+* In the command prompt at the end, type following command and press enter. This would delete all the JSONStore collections on the device.
+
+```
+WL.JSONStore.destroy();
+```
+
 # References
 
 * [JSONStore - Encrypted on device storage & automated data sync for better app performance & offline access](http://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/8.0/application-development/jsonstore/)
