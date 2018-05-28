@@ -65,7 +65,7 @@ and returns it to the mobile app.
 
 # Watch the Video
 
-https://youtu.be/ziQkZQgtEMM
+[![](http://img.youtube.com/vi/ziQkZQgtEMM/0.jpg)](https://youtu.be/ziQkZQgtEMM)
 
 # Steps
 * [1. Setup Ionic and MFP CLI](https://github.com/IBM/Ionic-MFP-App#step-1-setup-ionic-and-mfp-cli)
