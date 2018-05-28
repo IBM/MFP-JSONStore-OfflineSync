@@ -65,6 +65,8 @@ and returns it to the mobile app.
 
 # Watch the Video
 
+https://youtu.be/ziQkZQgtEMM
+
 # Steps
 * [1. Setup Ionic and MFP CLI](https://github.com/IBM/Ionic-MFP-App#step-1-setup-ionic-and-mfp-cli)
 * [2. Create Cloudant database and populate it with sample data](https://github.com/IBM/Ionic-MFP-App#step-2-create-cloudant-database-and-populate-it-with-sample-data)
