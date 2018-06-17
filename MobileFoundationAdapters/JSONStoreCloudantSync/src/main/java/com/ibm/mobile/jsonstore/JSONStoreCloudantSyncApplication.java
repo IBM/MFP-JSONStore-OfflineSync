@@ -42,7 +42,10 @@ public class JSONStoreCloudantSyncApplication extends MFPJAXRSApplication{
 
     /* Returns a handle to the CouchDB connection */
     CouchDbClient connectToDB(String dbName) throws Exception {
-	if (dbClients.containsKey(dbName)) {
+    // Workaround for bi-directional sync (i.e. both UPSTREAM and DOWNSTREAM sync)
+    dbName = configurationAPI.getPropertyValue("dbname");
+
+    if (dbClients.containsKey(dbName)) {
 		return dbClients.get(dbName);
 	}else{
 		try {
