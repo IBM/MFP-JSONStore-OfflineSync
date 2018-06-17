@@ -355,6 +355,39 @@ Open `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/adapter-resources/
 &lt;/mfp:adapter&gt;
 </code></pre>
 
+Update `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/java/com/ibm/mobile/jsonstore/JSONStoreCloudantSyncResource.java` as below:
+
+<pre><code>
+...
+<b>import com.ibm.mfp.adapter.api.OAuthSecurity;</b>
+...
+@Path("/")
+<b>@OAuthSecurity(scope = "UserLogin")</b>
+public class JSONStoreCloudantSyncResource {
+  ...
+}
+</code></pre>
+
+Update `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/java/com/ibm/mobile/jsonstore/JSONStoreCloudantSyncApplication.java` as below:
+
+<pre><code>
+...
+public class JSONStoreCloudantSyncApplication extends MFPJAXRSApplication {
+  ...
+  /* Returns a handle to the CouchDB connection */
+  CouchDbClient connectToDB(String dbName) throws Exception {
+    <b>// Workaround for bi-directional sync (i.e. both UPSTREAM and DOWNSTREAM sync)
+    dbName = configurationAPI.getPropertyValue("dbname");</b>
+
+    if (dbClients.containsKey(dbName)) {
+      return dbClients.get(dbName);
+    } else {
+      ...
+    }
+  }
+}
+</code></pre>
+
 Build and deploy the JSONStoreCloudantSync adapter as shown below:
 ```
 $ cd ./JSONStoreCloudantSync/
