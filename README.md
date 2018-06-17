@@ -216,20 +216,20 @@ Create temporary credentials to test adapter REST API as below:
 Test adapter REST API as below:
   * Inside the MFP dashboard, click on the `JSONStoreCloudantSync` adapter. Click on `Resources` and then click on `View Swagger Docs`. The Swagger UI for adapter REST APIs will get shown in a new window/tab.
   * Inside the Swagger UI, click on `Expand Operations`.
-  * To test the `POST /getAllModifications` API, first click on `OFF` toggle button to enable authentication. Select `UserLogin` and click on `Authorize` as shown below. Enter the `ID` and `Secret` created above against `Username` and `Password`. Click `OK`. If authentication is successful, the toggle button will switch to `ON` position.
+  * To test the `POST /modifications` API, first click on `OFF` toggle button to enable authentication. Select `UserLogin` and click on `Authorize` as shown below. Enter the `ID` and `Secret` created above against `Username` and `Password`. Click `OK`. If authentication is successful, the toggle button will switch to `ON` position.
 
   <img src="doc/source/images/AuthorizeSwaggerUI.png" alt="Authorize Swagger UI for running MFP Adapter REST APIs" width="1024" border="10" />
 
-  * Specify the following JSON object under POST body:
+  * Specify value for parametrer `db_name` as `myward`, for parameter `seqid` as `0`, and following JSON object under POST body:
 ```
 {
   "_id": "string",
   "_rev": "string",
-  "json": "{\"SeqID\": 0,\"DBName\": \"myward\"}"
+  "json": "[]"
 }
 ```
 
-  * Finally click on `Try it out` button to run the `POST /getAllModifications` API. The API response should get shown in the `Response Body` as shown in snapshot below.
+  * Finally click on `Try it out` button to run the `POST /modifications` API. The API response should get shown in the `Response Body` as shown in snapshot below.
 
   <img src="doc/source/images/SwaggerToolsForTestingMobileFirstAdapter.png" alt="Swagger UI for testing MobileFirst Adapters" width="1024" border="10" />
   
