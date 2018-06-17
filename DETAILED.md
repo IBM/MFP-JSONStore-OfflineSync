@@ -335,8 +335,8 @@ JSONStoreCloudantSync	MyWardData		UserLogin
 ```
 
 Open `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/adapter-resources/adapter.xml` and update the following properties to point to the Cloudant database created in https://github.com/IBM/Ionic-MFP-App.
- * Update `username` and `password` with the Cloudant API key as generated in [Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
- * For property `host`, specify the Cloudant Dashboard URL portion after (and excluding) *https://* and upto (and including) *-bluemix.cloudant.com* as shown in the snapshot of [Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
+ * Update `username` and `password` with the Cloudant API key as generated in [Ionic-MFP-App#Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
+ * For property `host`, specify the Cloudant Dashboard URL portion after (and excluding) *https://* and upto (and including) *-bluemix.cloudant.com* as shown in the snapshot of [Ionic-MFP-App#Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
  * For property `protocol`, leave the default value of `https` as-is.
  * For property `port`, leave the default value of `443` as-is.
  * For property `dbname`, leave the default value of `myward` as-is.
@@ -903,6 +903,7 @@ export class JsonStoreHandlerProvider {
 Install Ionic native plugin for `File` as below:
 
 ```
+$ cd ../../IonicMobileApp/
 $ npm install --save @ionic-native/file
 ```
 
