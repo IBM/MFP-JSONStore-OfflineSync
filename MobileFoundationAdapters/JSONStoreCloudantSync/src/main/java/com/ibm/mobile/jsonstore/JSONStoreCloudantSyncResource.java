@@ -32,6 +32,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.ibm.mfp.adapter.api.AdaptersAPI;
+import com.ibm.mfp.adapter.api.OAuthSecurity;
 
 import org.lightcouch.ChangesResult;
 import org.lightcouch.ChangesResult.Row;
@@ -47,6 +48,7 @@ import java.util.logging.Logger;
 
 
 @Path("/")
+@OAuthSecurity(scope = "UserLogin")
 public class JSONStoreCloudantSyncResource {
 
 	static Logger logger = Logger.getLogger(JSONStoreCloudantSyncResource.class.getName());
