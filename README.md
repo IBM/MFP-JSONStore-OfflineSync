@@ -118,22 +118,22 @@ Update `IonicMobileApp/config.xml` as below. Change `id`, `name`, `description` 
 ### 5.3 Specify Cloudant credentials in MFP adapter
 
 Open `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/adapter-resources/adapter.xml` and update the following properties to point to the Cloudant database created in [Step 2](https://github.com/IBM/Ionic-MFP-App#step-2-create-cloudant-database-and-populate-it-with-sample-data).
- * Update `key` and `password` with the Cloudant API key as generated in [Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
- * For property `account`, specify the Cloudant Dashboard URL portion after (and excluding) *https://* and upto (and including) *-bluemix.cloudant.com* as shown in the snapshot of [Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
- * For property `DBName`, leave the default value of `myward` as-is.
+ * Update `username` and `password` with the Cloudant API key as generated in [Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
+ * For property `host`, specify the Cloudant Dashboard URL portion after (and excluding) *https://* and upto (and including) *-bluemix.cloudant.com* as shown in the snapshot of [Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
  * For property `protocol`, leave the default value of `https` as-is.
  * For property `port`, leave the default value of `443` as-is.
- * For property `createDatabaseIfItDoesNotExist`, leave the default value of `false` as-is.
+ * For property `dbname`, leave the default value of `myward` as-is.
+ * For property `createnewdbifnotexist`, leave the default value of `false` as-is.
 
 <pre><code>
 &lt;mfp:adapter name="JSONStoreCloudantSync" ...&gt;
-  <b>&lt;property name="account" displayName="Cloudant account" defaultValue=""/&gt;
-  &lt;property name="key" displayName="Cloudant key" defaultValue=""/&gt;
-  &lt;property name="password" displayName="Cloudant password" defaultValue=""/&gt;</b>
-  &lt;property name="DBName" displayName="Cloudant DB name" defaultValue="myward"/&gt;
+  <b>&lt;property name="username" displayName="Cloudant Username" defaultValue=""/&gt;
+  &lt;property name="password" displayName="Cloudant Password" defaultValue=""/&gt;
+  &lt;property name="host" displayName="Cloudant Host" defaultValue=""/&gt;</b>
   &lt;property name="protocol" displayName="DB protocol" defaultValue="https" /&gt;
   &lt;property name="port" displayName="Db port" defaultValue="443" /&gt;
-  &lt;property name="createDatabaseIfItDoesNotExist" displayName="Create database if it does not exist?" defaultValue="false" /&gt;
+  &lt;property name="dbname" displayName="Cloudant Database Name" defaultValue="myward"/&gt;
+  &lt;property name="createnewdbifnotexist" displayName="Create database if it does not exist?" defaultValue="false" /&gt;
   ...
 &lt;/mfp:adapter&gt;
 </code></pre>
