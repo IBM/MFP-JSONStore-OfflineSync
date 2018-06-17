@@ -320,6 +320,53 @@ export class LoginPage {
 
 ### 3.1 Deploy MFP adapter that synchronizes data between Cloudant and JSONStore
 
+https://mobilefirstplatform.ibmcloud.com/blog/2018/02/23/jsonstoresync-couchdb-databases/
+
+Download JSONStoreCloudantSync adapter from https://github.com/MobileFirst-Platform-Developer-Center/JSONStoreCloudantSync/. This MobileFirst adapter provides upstream and downstream sync functionality between a Cloudant database and the JSONStore on mobile app.
+
+```
+$ cd ../MobileFoundationAdapters/
+$ curl -LOk https://github.com/MobileFirst-Platform-Developer-Center/JSONStoreCloudantSync/archive/master.zip
+$ unzip master.zip
+$ mv JSONStoreCloudantSync-master/ JSONStoreCloudantSync
+$ rm master.zip
+$ ls
+JSONStoreCloudantSync	MyWardData		UserLogin
+```
+
+Open `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/adapter-resources/adapter.xml` and update the following properties to point to the Cloudant database created in https://github.com/IBM/Ionic-MFP-App.
+ * Update `username` and `password` with the Cloudant API key as generated in [Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
+ * For property `host`, specify the Cloudant Dashboard URL portion after (and excluding) *https://* and upto (and including) *-bluemix.cloudant.com* as shown in the snapshot of [Step 2.2](https://github.com/IBM/Ionic-MFP-App#22-generate-cloudant-api-key).
+ * For property `protocol`, leave the default value of `https` as-is.
+ * For property `port`, leave the default value of `443` as-is.
+ * For property `dbname`, leave the default value of `myward` as-is.
+ * For property `createnewdbifnotexist`, leave the default value of `false` as-is.
+
+<pre><code>
+&lt;mfp:adapter name="JSONStoreCloudantSync" ...&gt;
+  <b>&lt;property name="username" displayName="Cloudant Username" defaultValue=""/&gt;
+  &lt;property name="password" displayName="Cloudant Password" defaultValue=""/&gt;
+  &lt;property name="host" displayName="Cloudant Host" defaultValue=""/&gt;</b>
+  &lt;property name="protocol" displayName="DB protocol" defaultValue="https" /&gt;
+  &lt;property name="port" displayName="Db port" defaultValue="443" /&gt;
+  &lt;property name="dbname" displayName="Cloudant Database Name" defaultValue="myward"/&gt;
+  &lt;property name="createnewdbifnotexist" displayName="Create database if it does not exist?" defaultValue="false" /&gt;
+  ...
+&lt;/mfp:adapter&gt;
+</code></pre>
+
+Build and deploy the JSONStoreCloudantSync adapter as shown below:
+```
+$ cd ./JSONStoreCloudantSync/
+$ mfpdev adapter build
+Building adapter...
+Successfully built adapter
+
+$ mfpdev adapter deploy
+Verifying server configuration...
+Deploying adapter to runtime mfp on https://mobilefoundation-71-hb-server.mybluemix.net:443/mfpadmin...
+Successfully deployed adapter
+```
 
 ### 3.2 Use JSONStore for offline storage and syncing of data from Cloudant
 
