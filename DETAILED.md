@@ -77,7 +77,7 @@ export class JsonStoreHandlerProvider {
   <b>isCollectionInitialized = {};
 
   userCredentialsCollectionName = 'userCredentials';
-  userCredentialsCollections = {
+  myCollections = {
     userCredentials: {
       searchFields: { username: 'string' }
     }
@@ -103,8 +103,8 @@ export class JsonStoreHandlerProvider {
         localKeyGen: true
       }
       WL.JSONStore.closeAll({});
-      WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
-        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection.');
+      WL.JSONStore.init(this.myCollections, options).then((success) => {
+        console.log('--> JsonStoreHandler: successfully initialized JSONStore collection.');
         this.isCollectionInitialized[username] = true;
         if (isOnline) {
           this.initCollectionForOfflineLogin();
@@ -416,34 +416,26 @@ export class JsonStoreHandlerProvider {
   objectStorageAccess = null;</b>
 
   userCredentialsCollectionName = 'userCredentials';
-  userCredentialsCollections = {
+  <b>myWardCollectionName = 'myward';
+  objectStorageDetailsCollectionName = 'objectStorageDetails';</b>
+
+  myCollections = {
     userCredentials: {
       searchFields: { username: 'string' }
-    }
-  }
-
-  <b>myWardCollectionName = 'myward';
-  myWardCollections = {
+    }<b>,
     myward: {
-      searchFields: { reportedBy: 'string' }
-    }
-  };
-  myWardCollectionOptions = {
-    syncPolicy: 0,
-    syncAdapterPath: 'JSONStoreCloudantSync',
-    onSyncSuccess: this.onSyncSuccess.bind(this),
-    onSyncFailure: this.onSyncFailure.bind(this),
-    username: null,
-    password: null,
-    localKeyGen: true
-  };
-
-  objectStorageDetailsCollectionName = 'objectStorageDetails';
-  objectStorageDetailsCollections = {
+      searchFields: { reportedBy: 'string' },
+      sync: {
+        syncPolicy: 0,
+        syncAdapterPath: 'JSONStoreCloudantSync',
+        onSyncSuccess: this.onSyncSuccess.bind(this),
+        onSyncFailure: this.onSyncFailure.bind(this),
+      }
+    },
     objectStorageDetails: {
       searchFields: { baseUrl: 'string' },
-    }
-  };</b>
+    }</b>
+  }
 
   constructor(<b>public myWardDataProvider: MyWardDataProvider</b>) {
     console.log('--> JsonStoreHandler constructor() called');
@@ -466,34 +458,14 @@ export class JsonStoreHandlerProvider {
         localKeyGen: true
       }
       WL.JSONStore.closeAll({});
-      WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
-        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection.');
+      WL.JSONStore.init(this.myCollections, options).then((success) => {
+        <b>console.log('--> JsonStoreHandler: successfully initialized JSONStore collections.');</b>
         this.isCollectionInitialized[username] = true;
         if (isOnline) {
           this.initCollectionForOfflineLogin();
+          <b>this.loadObjectStorageAccess.bind(this)();</b>
         }
-
-        <b>this.myWardCollectionOptions.username = encodedUsername;
-        this.myWardCollectionOptions.password = password;
-        WL.JSONStore.init(this.myWardCollections, this.myWardCollectionOptions).then((success) => {
-          console.log('--> JsonStoreHandler: successfully initialized \'' + this.myWardCollectionName + '\' JSONStore collection.');
-
-          WL.JSONStore.init(this.objectStorageDetailsCollections, options).then((success) => {
-            console.log('--> JsonStoreHandler: successfully initialized \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.');
-            if (isOnline) {
-              this.loadObjectStorageAccess.bind(this)();
-            }
-            resolve();
-          }, (failure) => {
-            console.log('--> JsonStoreHandler: failed to initialize \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
-            reject({collectionName: this.objectStorageDetailsCollectionName, failure: failure});
-          });
-
-        }, (failure) => {
-          console.log('--> JsonStoreHandler: failed to initialize \'' + this.myWardCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
-          reject({collectionName: this.myWardCollectionName, failure: failure});
-        });</b>
-
+        resolve();
       }, (failure) => {
         if (isOnline) {
           console.log('--> JsonStoreHandler: password change detected for user: ' + username + ' . Destroying old JSONStore so as to recreate it.\n', JSON.stringify(failure));
@@ -550,7 +522,7 @@ export class JsonStoreHandlerProvider {
   syncMyWardData() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
     if (collectionInstance != null) {
-      collectionInstance.sync({}).then(() => {
+      collectionInstance.sync().then(() => {
         console.log('--> JsonStoreHandler downstream sync initiated');
       }, (failure) => {
         console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + failure);
@@ -809,6 +781,38 @@ Update `IonicMobileApp/src/providers/json-store-handler/json-store-handler.ts` a
 ...
 export class JsonStoreHandlerProvider {
   ...
+  userCredentialsCollectionName = 'userCredentials';
+  myWardCollectionName = 'myward';
+  <b>newProblemsCollectionName = 'newproblems';</b>
+  objectStorageDetailsCollectionName = 'objectStorageDetails';
+
+  myCollections = {
+    userCredentials: {
+      searchFields: { username: 'string' }
+    },
+    myward: {
+      searchFields: { reportedBy: 'string' },
+      sync: {
+        syncPolicy: 0,
+        syncAdapterPath: 'JSONStoreCloudantSync',
+        onSyncSuccess: this.onSyncSuccess.bind(this),
+        onSyncFailure: this.onSyncFailure.bind(this),
+      }
+    },
+    <b>newproblems: {
+      searchFields: { problemDescription: 'string' },
+      sync: {
+        syncPolicy: 1,
+        syncAdapterPath: 'JSONStoreCloudantSync',
+        onSyncSuccess: this.onUpstreamSyncSuccess.bind(this),
+        onSyncFailure: this.onUpstreamSyncFailure.bind(this),
+      }
+    },</b>
+    objectStorageDetails: {
+      searchFields: { baseUrl: 'string' },
+    }
+  }
+
   constructor(<b>private network: Network, </b>public myWardDataProvider: MyWardDataProvider) {
     console.log('--> JsonStoreHandler constructor() called');
     <b>this.network.onConnect().subscribe(() => {
@@ -823,64 +827,13 @@ export class JsonStoreHandlerProvider {
       }, 3000);
     });</b>
   }
-  ...
 
-  <b>newProblemsCollectionName = 'newproblems';
-  newProblemsCollections = {
-    newproblems: {
-      searchFields: { problemDescription: 'string' }
-    }
-  };
-  newProblemsCollectionOptions = {
-    syncPolicy: 1,
-    syncAdapterPath:'JSONStoreCloudantSync',
-    onSyncSuccess: this.onUpstreamSyncSuccess.bind(this),
-    onSyncFailure: this.onUpstreamSyncFailure.bind(this),
-    username: null,
-    password: null,
-    localKeyGen: true
-  };</b>
-  ...
-
-  initCollections(username, password, isOnline:boolean) {
-    return new Promise( (resolve, reject) => {
-      ...
-      WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
-        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection.');
-        ...
-        WL.JSONStore.init(this.myWardCollections, this.myWardCollectionOptions).then((success) => {
-          console.log('--> JsonStoreHandler: successfully initialized \'' + this.myWardCollectionName + '\' JSONStore collection.');
-          WL.JSONStore.init(this.objectStorageDetailsCollections, options).then((success) => {
-            console.log('--> JsonStoreHandler: successfully initialized \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.');
-            if (isOnline) {
-              this.loadObjectStorageAccess.bind(this)();
-            }
-            <b>this.newProblemsCollectionOptions.username = encodedUsername;
-            this.newProblemsCollectionOptions.password = password;
-            WL.JSONStore.init(this.newProblemsCollections, this.newProblemsCollectionOptions).then((success) => {
-              console.log('--> JsonStoreHandler: successfully initialized \'' + this.newProblemsCollectionName + '\' JSONStore collection.');
-              resolve();
-            }, (failure) => {
-              console.log('--> JsonStoreHandler: failed to initialize \'' + this.newProblemsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
-              reject({collectionName: this.newProblemsCollectionName, failure: failure});
-            });</b>
-          }, (failure) => {
-            ...
-          });
-        }, (failure) => {
-          ...
-        });
-      }, (failure) => {
-        ...
-      });
-    });
-  }
   ...
 
   <b>initUpstreamSync() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
     if (collectionInstance != null) {
-      collectionInstance.sync({}).then(() => {
+      collectionInstance.sync().then(() => {
         console.log('--> JsonStoreHandler upstream sync initiated');
       }, (failure) => {
         console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + failure);
