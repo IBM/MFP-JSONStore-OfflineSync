@@ -1,5 +1,3 @@
-# - Work in progress -
-
 # Secure Offline Synchronization using IBM Mobile Foundation
 The increasing focus on Digital Transformation has led to more and more use cases where organizations want their enterprise apps to be usable even when the device is offline, and later synchronize the data with the enterprise when the device comes online again. In addition, organizations want to leverage the benefits of:
 * hybrid mobile apps where a single code base, developed using standard web technologies, works across platforms - Android, iOS and Windows phones, thereby enabling organizations to more easily embrace the policy of bring your own device (BYOD).
