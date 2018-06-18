@@ -43,50 +43,36 @@ export class JsonStoreHandlerProvider {
   }
 
   userCredentialsCollectionName = 'userCredentials';
-  userCredentialsCollections = {
+  myWardCollectionName = 'myward';
+  newProblemsCollectionName = 'newproblems';
+  objectStorageDetailsCollectionName = 'objectStorageDetails';
+
+  myCollections = {
     userCredentials: {
       searchFields: { username: 'string' }
-    }
-  }
-
-  myWardCollectionName = 'myward';
-  myWardCollections = {
+    },
     myward: {
-      searchFields: { reportedBy: 'string' }
-    }
-  };
-  myWardCollectionOptions = {
-    syncPolicy: 0,
-    syncAdapterPath:'JSONStoreCloudantSync',
-    onSyncSuccess: this.onSyncSuccess.bind(this),
-    onSyncFailure: this.onSyncFailure.bind(this),
-    username: null,
-    password: null,
-    localKeyGen: true
-  };
-
-  newProblemsCollectionName = 'newproblems';
-  newProblemsCollections = {
+      searchFields: { reportedBy: 'string' },
+      sync: {
+        syncPolicy: 0,
+        syncAdapterPath: 'JSONStoreCloudantSync',
+        onSyncSuccess: this.onSyncSuccess.bind(this),
+        onSyncFailure: this.onSyncFailure.bind(this),
+      }
+    },
     newproblems: {
-      searchFields: { problemDescription: 'string' }
-    }
-  };
-  newProblemsCollectionOptions = {
-    syncPolicy: 1,
-    syncAdapterPath:'JSONStoreCloudantSync',
-    onSyncSuccess: this.onUpstreamSyncSuccess.bind(this),
-    onSyncFailure: this.onUpstreamSyncFailure.bind(this),
-    username: null,
-    password: null,
-    localKeyGen: true
-  };
-
-  objectStorageDetailsCollectionName = 'objectStorageDetails';
-  objectStorageDetailsCollections = {
+      searchFields: { problemDescription: 'string' },
+      sync: {
+        syncPolicy: 1,
+        syncAdapterPath: 'JSONStoreCloudantSync',
+        onSyncSuccess: this.onUpstreamSyncSuccess.bind(this),
+        onSyncFailure: this.onUpstreamSyncFailure.bind(this),
+      }
+    },
     objectStorageDetails: {
       searchFields: { baseUrl: 'string' },
     }
-  };
+  }
 
   // https://www.ibm.com/support/knowledgecenter/en/SSHS8R_8.0.0/com.ibm.worklight.apiref.doc/html/refjavascript-client/html/WL.JSONStore.html
   initCollections(username, password, isOnline:boolean) {
@@ -106,50 +92,15 @@ export class JsonStoreHandlerProvider {
         localKeyGen: true
       }
       WL.JSONStore.closeAll({});
-      WL.JSONStore.init(this.userCredentialsCollections, options).then((success) => {
+      WL.JSONStore.init(this.myCollections, options).then((success) => {
         let timeEnd = performance.now();
-        console.log('--> JsonStoreHandler: successfully initialized \'' + this.userCredentialsCollectionName + '\' JSONStore collection. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
+        console.log('--> JsonStoreHandler: successfully initialized JSONStore collections. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
         this.isCollectionInitialized[username] = true;
         if (isOnline) {
           this.initCollectionForOfflineLogin();
+          this.loadObjectStorageAccess.bind(this)();
         }
-
-        timeBegin = performance.now();
-        this.myWardCollectionOptions.username = encodedUsername;
-        this.myWardCollectionOptions.password = password;
-        WL.JSONStore.init(this.myWardCollections, this.myWardCollectionOptions).then((success) => {
-          timeEnd = performance.now();
-          console.log('--> JsonStoreHandler: successfully initialized \'' + this.myWardCollectionName + '\' JSONStore collection. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
-
-          timeBegin = performance.now();
-          WL.JSONStore.init(this.objectStorageDetailsCollections, options).then((success) => {
-            timeEnd = performance.now();
-            console.log('--> JsonStoreHandler: successfully initialized \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
-            if (isOnline) {
-              this.loadObjectStorageAccess.bind(this)();
-            }
-
-            timeBegin = performance.now();
-            this.newProblemsCollectionOptions.username = encodedUsername;
-            this.newProblemsCollectionOptions.password = password;
-            WL.JSONStore.init(this.newProblemsCollections, this.newProblemsCollectionOptions).then((success) => {
-              timeEnd = performance.now();
-              console.log('--> JsonStoreHandler: successfully initialized \'' + this.newProblemsCollectionName + '\' JSONStore collection. Time spent = ' + (timeEnd - timeBegin) + ' ms.');
-              resolve();
-            }, (failure) => {
-              console.log('--> JsonStoreHandler: failed to initialize \'' + this.newProblemsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
-              reject({collectionName: this.newProblemsCollectionName, failure: failure});
-            });
-          }, (failure) => {
-            console.log('--> JsonStoreHandler: failed to initialize \'' + this.objectStorageDetailsCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
-            reject({collectionName: this.objectStorageDetailsCollectionName, failure: failure});
-          });
-
-        }, (failure) => {
-          console.log('--> JsonStoreHandler: failed to initialize \'' + this.myWardCollectionName + '\' JSONStore collection.\n' + JSON.stringify(failure));
-          reject({collectionName: this.myWardCollectionName, failure: failure});
-        });
-
+        resolve();
       }, (failure) => {
         if (isOnline) {
           console.log('--> JsonStoreHandler: password change detected for user: ' + username + ' . Destroying old JSONStore so as to recreate it.\n', JSON.stringify(failure));
@@ -274,7 +225,7 @@ export class JsonStoreHandlerProvider {
   syncMyWardData() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.myWardCollectionName);
     if (collectionInstance != null) {
-      collectionInstance.sync({}).then(() => {
+      collectionInstance.sync().then(() => {
         console.log('--> JsonStoreHandler downstream sync initiated');
       }, (failure) => {
         console.log('--> JsonStoreHandler Failed to initiate downstream sync\n' + failure);
@@ -287,7 +238,7 @@ export class JsonStoreHandlerProvider {
   initUpstreamSync() {
     let collectionInstance: WL.JSONStore.JSONStoreInstance = WL.JSONStore.get(this.newProblemsCollectionName);
     if (collectionInstance != null) {
-      collectionInstance.sync({}).then(() => {
+      collectionInstance.sync().then(() => {
         console.log('--> JsonStoreHandler upstream sync initiated');
       }, (failure) => {
         console.log('--> JsonStoreHandler Failed to initiate upstream sync\n' + failure);

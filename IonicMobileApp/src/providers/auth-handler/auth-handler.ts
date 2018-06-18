@@ -112,10 +112,7 @@ export class AuthHandlerProvider {
       this.isChallenged = false;
       this.timeEnd = performance.now();
       console.log('--> AuthHandler: Time spent in server login = ' + (this.timeEnd - this.timeBegin) + ' ms.');
-      this.timeBegin = performance.now();
       this.jsonStoreHandler.initCollections(username, password, true).then(() => {
-        this.timeEnd = performance.now();
-        console.log('--> AuthHandler: Time spent in initializing all collections = ' + (this.timeEnd - this.timeBegin) + ' ms.');
         this.loginSuccessCallback();
       });
     };
