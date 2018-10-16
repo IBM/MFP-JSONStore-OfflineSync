@@ -1,14 +1,7 @@
 # Secure Offline Synchronization using IBM Mobile Foundation
-The increasing focus on Digital Transformation has led to more and more use cases where organizations want their enterprise apps to be usable even when the device is offline, and later synchronize the data with the enterprise when the device comes online again. In addition, organizations want to leverage the benefits of:
-* hybrid mobile apps where a single code base, developed using standard web technologies, works across platforms - Android, iOS and Windows phones, thereby enabling organizations to more easily embrace the policy of bring your own device (BYOD).
-* cloud hosted mobile backend servers for robust handling of security challenges posed by above scenarios, backend integration, app life cycle management and app analytics.
+The increasing focus on Digital Transformation has led to more and more use cases where organizations want their enterprise apps to be usable even when the device is offline, and later synchronize the data with the enterprise when the device comes online again.
 
-In this IBM code pattern, we will show you how to combine the following technologies to securely implement the mobile offline synchronization use case.
-* IBM Mobile Foundation - the enterprise grade mobile backend server available as a service on IBM Cloud,
-* Ionic framework - an open-source SDK for hybrid mobile app development built on top of Apache Cordova and Angular,
-* JSONStore - the encrypted on device storage & automated data sync for better app performance & offline access,
-* IBM Cloudant - a fully managed NoSQL JSON database service available on IBM Cloud, and
-* IBM Cloud Object Storage - A highly scalable cloud storage service, designed for high durability, resiliency and security.
+In this IBM code pattern, we will show you how to securely implement the mobile offline synchronization use case using IBM Mobile Foundation and other IBM technologies. 
 
 When you have completed this code pattern, you will understand:
 * How to achieve offline user authentication in mobile apps using JSONStore.
@@ -53,13 +46,6 @@ and returns it to the mobile app.
 9. In parallel to step 7 above, mobile app fetches Authorization token for interacting with Cloud Object Storage service by making a call to MFP adapter, and then uploads the new images to Cloud Object Storage.
 10. Other users who click on refresh button on the home page (and those who log in afresh) can see the newly reported civic problem and its details.
 
-## Included Components
-* [Cloudant NoSQL DB](https://console.ng.bluemix.net/catalog/services/cloudant-nosql-db): A fully managed data layer designed for modern web and mobile applications that leverages a flexible JSON schema.
-* [Cloud Object Storage](https://console.bluemix.net/catalog/infrastructure/cloud-object-storage): A highly scalable cloud storage service, designed for high durability, resiliency and security.
-* [Mobile Foundation](https://console.bluemix.net/catalog/services/mobile-foundation): A scalable mobile access gateway powered by the market-leading IBM Mobile Foundation Technology. The service offers a comprehensive set of mobile backend capabilities such as, App life cycle, Push, Analytics, Feature Toggle, Security and Authentication and offline synch. 
-
-## Featured Technologies
-* [Mobile](https://mobilefirstplatform.ibmcloud.com/): Systems of engagement are increasingly using mobile technology as the platform for delivery.
 
 # Watch the Video
 
