@@ -45,7 +45,7 @@ Other users who click on refresh button on the home page (and those who log in a
 
 # Watch the Video
 
-[![](http://img.youtube.com/vi/ziQkZQgtEMM/0.jpg)](https://youtu.be/ziQkZQgtEMM)
+[![](https://img.youtube.com/vi/ziQkZQgtEMM/0.jpg)](https://youtu.be/ziQkZQgtEMM)
 
 # Steps
 * [1. Setup Ionic and MFP CLI](https://github.com/IBM/Ionic-MFP-App#step-1-setup-ionic-and-mfp-cli)
@@ -225,7 +225,7 @@ Follow the instructions in [Step 7](https://github.com/IBM/Ionic-MFP-App#step-7-
 ## Step 8. Test the app functionality in offline mode
 
 ### How the app works in offline mode
-A note on how the offline mode is supported for each of the pages<sup>\*</sup> in MyWard app: (<sup>\*</sup>Ionic page is the equivalent of [iOS View](https://developer.apple.com/library/content/documentation/WindowsViews/Conceptual/ViewPG_iPhoneOS/CreatingViews/CreatingViews.html) or [Android Activity](https://developer.android.com/guide/components/activities/))
+A note on how the offline mode is supported for each of the pages<sup>\*</sup> in MyWard app: (<sup>\*</sup>Ionic page is the equivalent of [iOS View](https://developer.apple.com/library/archive/documentation/WindowsViews/Conceptual/ViewPG_iPhoneOS/CreatingViews/CreatingViews.html) or [Android Activity](https://developer.android.com/guide/components/activities/))
 
 * `Login` page:
   - The first time the app is launched after installation, the user login will work only in online mode. This is to make sure that the user credentials are validated by making a call to MFP security adapter. Once the user authentication succeeds, subsequent login attempts by the same user are supported in offline mode with the help of encrypted [JSONStore](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/7.1/advanced-topics/offline-authentication/).
@@ -290,12 +290,12 @@ WL.JSONStore.destroy();
 
 # References
 
-* [JSONStore - Encrypted on device storage & automated data sync for better app performance & offline access](http://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/8.0/application-development/jsonstore/)
+* [JSONStore - Encrypted on device storage & automated data sync for better app performance & offline access](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/8.0/application-development/jsonstore/)
 * [Offline authentication using JSONStore](https://mobilefirstplatform.ibmcloud.com/tutorials/en/foundation/7.1/advanced-topics/offline-authentication/)
 * [Automated synchronization of JSONStore collections with CouchDB databases](https://mobilefirstplatform.ibmcloud.com/blog/2018/02/23/jsonstoresync-couchdb-databases/)
 * [cordova-plugin-file - a File API allowing read/write access to files residing on the device](https://cordova.apache.org/docs/en/latest/reference/cordova-plugin-file/)
 
 # License
-This code pattern is licensed under the Apache Software License, Version 2.  Separate third party code objects invoked within this code pattern are licensed by their respective providers pursuant to their own separate licenses. Contributions are subject to the [Developer Certificate of Origin, Version 1.1 (DCO)](https://developercertificate.org/) and the [Apache Software License, Version 2](http://www.apache.org/licenses/LICENSE-2.0.txt).
+This code pattern is licensed under the Apache Software License, Version 2.  Separate third party code objects invoked within this code pattern are licensed by their respective providers pursuant to their own separate licenses. Contributions are subject to the [Developer Certificate of Origin, Version 1.1 (DCO)](https://developercertificate.org/) and the [Apache Software License, Version 2](https://www.apache.org/licenses/LICENSE-2.0.txt).
 
-[Apache Software License (ASL) FAQ](http://www.apache.org/foundation/license-faq.html#WhatDoesItMEAN)
+[Apache Software License (ASL) FAQ](https://www.apache.org/foundation/license-faq.html#WhatDoesItMEAN)
