@@ -1,7 +1,7 @@
 # Secure Offline Synchronization using IBM Mobile Foundation
 The increasing focus on Digital Transformation has led to more and more use cases where organizations want their enterprise apps to be usable even when the device is offline, and later synchronize the data with the enterprise when the device comes online again.
 
-In this IBM code pattern, we will show you how to securely implement the mobile offline synchronization use case using IBM Mobile Foundation and other IBM technologies. 
+In this IBM code pattern, we will show you how to securely implement the mobile offline synchronization use case using IBM Mobile Foundation and other IBM technologies.
 
 When you have completed this code pattern, you will understand:
 * How to achieve offline user authentication in mobile apps using JSONStore.
@@ -78,7 +78,7 @@ This project builds on top of https://github.com/IBM/Ionic-MFP-App. Run followin
 ### 5.1 Clone repo
 
 ```
-$ git clone https://github.com/IBM/MFP-JSONStore-OfflineSync.git
+$ git clone https://github.com/IBM/MFP-JSONStore-OfflineSync
 $ cd MFP-JSONStore-OfflineSync
 ```
 
@@ -88,7 +88,7 @@ Update `IonicMobileApp/config.xml` as below. Change `id`, `name`, `description` 
 
 <pre><code>
 &lt;?xml version='1.0' encoding='utf-8'?&gt;
-&lt;widget <b>id="org.mycity.myward"</b> version="2.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:mfp="http://www.ibm.com/mobilefirst/cordova-plugin-mfp"&gt;
+&lt;widget <b>id="org.mycity.myward"</b> version="2.0.0" xmlns="https://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:mfp="http://www.ibm.com/mobilefirst/cordova-plugin-mfp"&gt;
     <b>&lt;name&gt;MyWard&lt;/name&gt;
     &lt;description&gt;Get your civic issues resolved by posting through this app.&lt;/description&gt;
     &lt;author email="shivahr@gmail.com" href="https://developer.ibm.com/code/author/shivahr/"&gt;Shiva Kumar H R&lt;/author&gt;</b>
@@ -121,7 +121,7 @@ Open `MobileFoundationAdapters/JSONStoreCloudantSync/src/main/adapter-resources/
 ### 5.4 Specify Cloud Object Storage credentials in MFP Adapter
 
 Open `MobileFoundationAdapters/MyWardData/src/main/adapter-resources/adapter.xml` and update the following properties to point to the Cloud Object Storage created in [Step 3](https://github.com/IBM/Ionic-MFP-App#step-3-create-ibm-cloud-object-storage-service-and-populate-it-with-sample-data).
-  * Specify value for `bucketName` as created in [Step 3.1](https://github.com/IBM/Ionic-MFP-App#31-create-ibm-cloud-object-storage). 
+  * Specify value for `bucketName` as created in [Step 3.1](https://github.com/IBM/Ionic-MFP-App#31-create-ibm-cloud-object-storage).
   * Specify `serviceId` and `apiKey` created in [Step 3.2](https://github.com/IBM/Ionic-MFP-App#32-create-service-id-and-api-key-for-accessing-objects).
   * While creating the bucket in [Step 3.1](https://github.com/IBM/Ionic-MFP-App#31-create-ibm-cloud-object-storage), if you selected a different Location/Resiliency, then update the `endpointURL` as per the specification in https://cloud.ibm.com/docs/services/cloud-object-storage/basics/endpoints.html#select-regions-and-endpoints.
 
@@ -182,7 +182,7 @@ Verify MFP Adapter configuration as below:
   <img src="doc/source/images/AdapterConfiguration.png" alt="Option to specify the credentials for accessing Cloudant NoSQL DB in deployed MFP Adapter" width="800" border="10" />
 
   * Click on `Resources` tab. You should see the various REST APIs exposed by `JSONStoreCloudantSync` adapter as shown below. The `Security` column should show the protecting scope `UserLogin` against each REST method.
-    
+
   <img src="doc/source/images/AdapterProtectingScope.png" alt="The REST APIs of JSONStoreCloudantSync adapter are protected by UserLogin security scope" width="800" border="10" />
 
 ### 6.3 Test the JSONStoreCloudantSync adapter
@@ -212,7 +212,7 @@ Test adapter REST API as below:
   * Finally click on `Try it out` button to run the `POST /modifications` API. The API response should get shown in the `Response Body` as shown in snapshot below.
 
   <img src="doc/source/images/SwaggerToolsForTestingMobileFirstAdapter.png" alt="Swagger UI for testing MobileFirst Adapters" width="1024" border="10" />
-  
+
 Delete the temporary credentials after testing adapter REST API as below:
   * Inside the MFP dashboard, click on `Runtime Settings`. Click on `Confidential Clients`.
   * Delete the `Client ID` created previously.
